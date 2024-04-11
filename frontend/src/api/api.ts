@@ -8,7 +8,8 @@ export async function conversationApi(options: ConversationRequest, abortSignal:
             "Content-Type": "application/json"
         },
         body: JSON.stringify({
-            messages: options.messages
+            messages: options.messages,
+            gptModel: options.gptModel
         }),
         signal: abortSignal
     });
@@ -27,7 +28,6 @@ export async function getUserInfo(): Promise<UserInfo[]> {
     return payload;
 }
 
-// export const fetchChatHistoryInit = async (): Promise<Conversation[] | null> => {
 export const fetchChatHistoryInit = (): Conversation[] | null => {
     // Make initial API call here
 

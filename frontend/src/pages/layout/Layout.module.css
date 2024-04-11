@@ -5,30 +5,88 @@
 }
 
 .header {
-    background-color: #f2f2f2;
+    background-color: #222222;
+    color: #f2f2f2;
+    height: 64px;
+    margin-bottom: 20px;
 }
 
 .headerContainer {
     display: flex;
-    justify-content: left;
     align-items: center;
+    justify-content: space-around;
+    margin-right: 12px;
+    margin-left: 12px;
 }
 
 .headerTitleContainer {
     display: flex;
     align-items: center;
-    margin-left: 14px;
+    margin-right: 40px;
+    color: #f2f2f2;
     text-decoration: none;
 }
 
+.headerLogo {
+    height: 40px;
+}
+
 .headerTitle {
-    font-style: normal;
+    margin-left: 12px;
     font-weight: 600;
-    font-size: 20px;
-    line-height: 28px;
+}
+
+.headerTitleLeft {
+    margin-left: 12px;
+    font-weight: 600;
+    text-align: left;
+}
+
+.headerTitleRight {
+    margin-left: 12px;
+    font-weight: 600;
+    text-align: right;
+}
+
+.headerNavList {
     display: flex;
-    align-items: flex-end;
-    color: #242424;
+    list-style: none;
+    justify-content: space-around; /* または space-between */
+}
+.headerNavPageLink {
+    color: #f2f2f2;
+    text-decoration: none;
+    opacity: 0.4;
+
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    transition-duration: 500ms;
+    transition-property: opacity;
+}
+
+.headerNavPageLink:hover {
+    opacity: 1;
+}
+
+.headerNavPageLinkActive {
+    opacity: 1;
+    color: #f2f2f2;
+    text-decoration: none;
+}
+
+.headerNavLeftMargin {
+    margin-left: 20px;
+}
+.headerNavRightMargin {
+    margin-right: 20px;
+}
+
+
+.headerContainer {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    margin-right: 12px;
+    margin-left: 12px;
 }
 
 .headerIcon {

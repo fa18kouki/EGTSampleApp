@@ -29,6 +29,7 @@ export type ChatMessage = {
     content: string;
     end_turn?: boolean;
     date: string;
+    gptmodel?: string;
     feedback?: Feedback;
     context?: string;
 };
@@ -65,6 +66,7 @@ export type ChatResponse = {
 
 export type ConversationRequest = {
     messages: ChatMessage[];
+    gptModel: string;
 };
 
 export type UserInfo = {
