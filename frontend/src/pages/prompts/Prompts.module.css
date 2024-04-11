@@ -1,0 +1,29 @@
+.documentPreview {
+    opacity: 0.7;
+}
+
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; /* 画面の高さ全体を使用 */
+}
+.prompts {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center; /* 中央揃え */
+    gap: 20px; /* アイテム間のスペース */
+}
+
+/* 画面幅が狭い場合のスタイル調整 */
+@media (max-width: 768px) {
+    .promptCard {
+        width: calc(50% - 10px); /* 画面が狭い場合は2列に */
+    }
+}
+
+@media (max-width: 480px) {
+    .promptCard {
+        width: 100%; /* さらに狭い場合は1列に */
+    }
+}

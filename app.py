@@ -112,9 +112,9 @@ AZURE_SEARCH_STRICTNESS = os.environ.get("AZURE_SEARCH_STRICTNESS", SEARCH_STRIC
 
 # AOAI Integration Settings
 AZURE_OPENAI_RESOURCE = os.environ.get("AZURE_OPENAI_RESOURCE")
-AZURE_OPENAI_MODEL = os.environ.get("AZURE_OPENAI_MODEL")
 AZURE_OPENAI_ENDPOINT = os.environ.get("AZURE_OPENAI_ENDPOINT")
 AZURE_OPENAI_KEY = os.environ.get("AZURE_OPENAI_KEY")
+AZURE_OPENAI_DEPLOYMENT = os.environ.get("AZURE_OPENAI_DEPLOYMENT")
 AZURE_OPENAI_TEMPERATURE = os.environ.get("AZURE_OPENAI_TEMPERATURE", 0)
 AZURE_OPENAI_TOP_P = os.environ.get("AZURE_OPENAI_TOP_P", 1.0)
 AZURE_OPENAI_MAX_TOKENS = os.environ.get("AZURE_OPENAI_MAX_TOKENS", 1000)
@@ -128,9 +128,11 @@ AZURE_OPENAI_PREVIEW_API_VERSION = os.environ.get(
     MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION,
 )
 AZURE_OPENAI_STREAM = os.environ.get("AZURE_OPENAI_STREAM", "true")
-AZURE_OPENAI_MODEL_NAME = os.environ.get(
-    "AZURE_OPENAI_MODEL_NAME", "gpt-35-turbo-16k"
-)  # Name of the model, e.g. 'gpt-35-turbo-16k' or 'gpt-4'
+AZURE_OPENAI_GPT4_DEPLOYMENT = os.environ.get("AZURE_OPENAI_GPT4_DEPLOYMENT")
+AZURE_OPENAI_GPT4_MODEL = os.environ.get("AZURE_OPENAI_GPT4_MODEL")
+AZURE_OPENAI_GPT35_TURBO_16K_DEPLOYMENT = os.environ.get("AZURE_OPENAI_GPT35_TURBO_16K_DEPLOYMENT")
+AZURE_OPENAI_GPT35_TURBO_16K_MODEL = os.environ.get("AZURE_OPENAI_GPT35_TURBO_16K_MODEL")
+
 AZURE_OPENAI_EMBEDDING_ENDPOINT = os.environ.get("AZURE_OPENAI_EMBEDDING_ENDPOINT")
 AZURE_OPENAI_EMBEDDING_KEY = os.environ.get("AZURE_OPENAI_EMBEDDING_KEY")
 AZURE_OPENAI_EMBEDDING_NAME = os.environ.get("AZURE_OPENAI_EMBEDDING_NAME", "")
@@ -339,10 +341,9 @@ def init_openai_client(use_data=SHOULD_USE_DATA):
             )
 
         # Deployment
-        deployment = AZURE_OPENAI_MODEL
+        deployment = AZURE_OPENAI_GPT4_DEPLOYMENT
         if not deployment:
             raise Exception("AZURE_OPENAI_MODEL is required")
-
         # Default Headers
         default_headers = {"x-ms-useragent": USER_AGENT}
 
@@ -722,6 +723,11 @@ def get_configured_data_source():
 
 def prepare_model_args(request_body):
     request_messages = request_body.get("messages", [])
+    #gptModel= AZURE_OPENAI_GPT35_TURBO_16K_DEPLOYMENT
+    if request_body.get("gptModel") == "gpt-4":
+        gptModel = AZURE_OPENAI_GPT4_DEPLOYMENT
+    else:
+        gptModel = AZURE_OPENAI_GPT35_TURBO_16K_DEPLOYMENT
     messages = []
     if not SHOULD_USE_DATA:
         messages = [{"role": "system", "content": AZURE_OPENAI_SYSTEM_MESSAGE}]
@@ -741,7 +747,7 @@ def prepare_model_args(request_body):
             else None
         ),
         "stream": SHOULD_STREAM,
-        "model": AZURE_OPENAI_MODEL,
+        "model": gptModel,
     }
 
     if SHOULD_USE_DATA:
@@ -885,7 +891,7 @@ async def conversation():
 
     return await conversation_internal(request_json)
 
-
+"""
 @bp.route("/frontend_settings", methods=["GET"])
 def get_frontend_settings():
     try:
@@ -894,7 +900,7 @@ def get_frontend_settings():
         logging.exception("Exception in /frontend_settings")
         return jsonify({"error": str(e)}), 500
 
-
+"""
 ## Conversation History API ##
 @bp.route("/history/generate", methods=["POST"])
 async def add_conversation():
@@ -925,12 +931,14 @@ async def add_conversation():
         ## Format the incoming message object in the "chat/completions" messages format
         ## then write it to the conversation history in cosmos
         messages = request_json["messages"]
+        token = request_json.get("token", 0)
         if len(messages) > 0 and messages[-1]["role"] == "user":
             createdMessageValue = await cosmos_conversation_client.create_message(
                 uuid=str(uuid.uuid4()),
                 conversation_id=conversation_id,
                 user_id=user_id,
                 input_message=messages[-1],
+                token=token
             )
             if createdMessageValue == "Conversation not found":
                 raise Exception(
@@ -976,6 +984,9 @@ async def update_conversation():
         ## Format the incoming message object in the "chat/completions" messages format
         ## then write it to the conversation history in cosmos
         messages = request_json["messages"]
+        import logging
+        logging.debug(f"Received request_json: {request_json}")
+        token = request_json.get("token", 0)
         if len(messages) > 0 and messages[-1]["role"] == "assistant":
             if len(messages) > 1 and messages[-2].get("role", None) == "tool":
                 # write the tool message first
@@ -984,6 +995,7 @@ async def update_conversation():
                     conversation_id=conversation_id,
                     user_id=user_id,
                     input_message=messages[-2],
+                    token=token
                 )
             # write the assistant message
             await cosmos_conversation_client.create_message(
@@ -991,6 +1003,7 @@ async def update_conversation():
                 conversation_id=conversation_id,
                 user_id=user_id,
                 input_message=messages[-1],
+                token=token
             )
         else:
             raise Exception("No bot messages found")
@@ -1355,7 +1368,7 @@ async def generate_title(conversation_messages):
     try:
         azure_openai_client = init_openai_client(use_data=False)
         response = await azure_openai_client.chat.completions.create(
-            model=AZURE_OPENAI_MODEL, messages=messages, temperature=1, max_tokens=64
+            model=AZURE_OPENAI_GPT35_TURBO_16K_MODEL, messages=messages, temperature=1, max_tokens=64
         )
 
         title = json.loads(response.choices[0].message.content)["title"]
