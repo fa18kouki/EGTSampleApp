@@ -1,6 +1,20 @@
 import { UserInfo, ConversationRequest, Conversation, ChatMessage, CosmosDBHealth, CosmosDBStatus } from "./models";
 import { chatHistorySampleData } from "../constants/chatHistory";
 
+export async function GetUserInfo(): Promise<boolean> {
+    const response = await fetch("/auth/me", {
+        method: "GET",
+    });
+    return response.ok;
+} 
+
+export async function Logout(): Promise<boolean> {
+    const response = await fetch("/auth/logout", {
+        method: "GET",
+    });
+    return response.ok;
+}
+
 export async function conversationApi(options: ConversationRequest, abortSignal: AbortSignal): Promise<Response> {
     const response = await fetch("/conversation", {
         method: "POST",
@@ -18,7 +32,9 @@ export async function conversationApi(options: ConversationRequest, abortSignal:
 }
 
 export async function getUserInfo(): Promise<UserInfo[]> {
-    const response = await fetch('/.auth/me');
+    const response = await fetch('/auth/me',{
+        method: 'GET',
+    });
     if (!response.ok) {
         console.log("No identity provider found. Access to chat will be blocked.")
         return [];
@@ -330,6 +346,104 @@ export const historyMessageFeedback = async (messageId: string, feedback: string
     })
     .catch((err) => {
         console.error("There was an issue logging feedback.");
+        let errRes: Response = {
+            ...new Response,
+            ok: false,
+            status: 500,
+        }
+        return errRes;
+    })
+    return response;
+}
+
+export const addPrompt = async (userName: string, prompt: string, tags: string[]): Promise<Response> => {
+    const response = await fetch("/prompt/add", {
+        method: "POST",
+        body: JSON.stringify({
+            userName: userName,
+            prompt: prompt,
+            tags: tags,
+        }),
+        headers: {
+            "Content-Type": "application/json"
+        },
+    })
+    .then((res) => {
+        return res
+    })
+    .catch((err) => {
+        console.error("プロンプトの追加中にエラーが発生しました。");
+        let errRes: Response = {
+            ...new Response,
+            ok: false,
+            status: 500,
+        }
+        return errRes;
+    })
+    return response;
+}
+
+export const getPrompts = async (): Promise<Response> => {
+    const response = await fetch("/prompt/get_prompts", {
+        method: "GET",
+    })
+    .then((res) => {
+        return res
+    })
+    .catch((err) => {
+        console.error("There was an issue fetching prompts.");
+        let errRes: Response = {
+            ...new Response,
+            ok: false,
+            status: 500,
+        }
+        return errRes;
+    })
+    return response;
+}
+
+export const deletePrompt = async (promptId: string): Promise<Response> => {
+    const response = await fetch("/delete_prompt", {
+        method: "POST",
+        body: JSON.stringify({
+            promptId: promptId
+        }),
+        headers: {
+            "Content-Type": "application/json"
+        },
+    })
+    .then((res) => {
+        return res
+    })
+    .catch((err) => {
+        console.error("There was an issue deleting the prompt.");
+        let errRes: Response = {
+            ...new Response,
+            ok: false,
+            status: 500,
+        }
+        return errRes;
+    })
+    return response;
+}
+
+export const editPrompt = async (promptId: string, prompt: string, tags: string[]): Promise<Response> => {
+    const response = await fetch("/edit_prompt", {
+        method: "POST",
+        body: JSON.stringify({
+            promptId: promptId,
+            prompt: prompt,
+            tags: tags
+        }),
+        headers: {
+            "Content-Type": "application/json"
+        },
+    })
+    .then((res) => {
+        return res
+    })
+    .catch((err) => {
+        console.error("There was an issue editing the prompt.");
         let errRes: Response = {
             ...new Response,
             ok: false,

@@ -3,6 +3,7 @@
 echo ""
 echo "Restoring frontend npm packages"
 echo ""
+
 cd frontend
 npm install
 if [ $? -ne 0 ]; then

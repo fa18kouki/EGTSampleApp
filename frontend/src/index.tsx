@@ -11,6 +11,7 @@ import Chat from "./pages/chat/Chat";
 import UnauthChat from "./pages/unauth_chat/UnauthChat";
 import UserPage from "./pages/user_page/UserPage";
 import { AppStateProvider } from "./state/AppProvider";
+import Login from "./pages/login/Login";
 
 initializeIcons();
 
@@ -24,6 +25,7 @@ export default function App() {
                         <Route path="unauth_chat" element={<UnauthChat />} />
                         <Route path="user_page" element={<UserPage />} />
                         <Route path="prompts" element={<Prompts />} />
+                        <Route path="login" element={<Login />} />
                         <Route path="*" element={<NoPage />} />
                     </Route>
                 </Routes>

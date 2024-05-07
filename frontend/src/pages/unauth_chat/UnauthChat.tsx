@@ -29,7 +29,7 @@ import DOMPurify from "dompurify";
 import styles from "./UnauthChat.module.css";
 import Contoso from "../../assets/Contoso.svg";
 import { XSSAllowTags } from "../../constants/xssAllowTags";
-import { HistoryButton} from "../../components/common/Button";
+import { HistoryButton } from "../../components/common/Button";
 import {
   ChatMessage,
   ConversationRequest,
@@ -690,7 +690,7 @@ const UnauthChat = () => {
       const response = await historyUpdate(messages, id);
       return response;
     };
-  
+
     if (
       appStateContext &&
       appStateContext.state.currentChat &&
@@ -780,30 +780,31 @@ const UnauthChat = () => {
   return (
     <div className={styles.container} role="main">
       <Stack horizontal className={styles.chatRoot}>
-        <Stack
-          horizontal
-          tokens={{ childrenGap: 4 }}
-          className={styles.shareButtonContainer}
-        >
-          {appStateContext?.state.isCosmosDBAvailable?.status !==
-            CosmosDBStatus.NotConfigured && (
-            <HistoryButton
-              onClick={handleHistoryClick}
-              text={
-                appStateContext?.state?.isChatHistoryOpen
-                  ? hideHistoryLabel
-                  : showHistoryLabel
-              }
-            />
-          )}
-        </Stack>
-        <div className={styles.commandsContainer}>
-          <SettingsButton
-            className={styles.commandButton}
-            onClick={() => setIsConfigPanelOpen(!isConfigPanelOpen)}
-          />
-        </div>
         <div className={styles.chatContainer}>
+          <div className={styles.commandsContainer}>
+            {/*}
+            <Stack horizontal >
+              {appStateContext?.state.isCosmosDBAvailable?.status !==
+                CosmosDBStatus.NotConfigured && (
+                <HistoryButton
+                  onClick={handleHistoryClick}
+                  text={
+                    appStateContext?.state?.isChatHistoryOpen
+                      ? hideHistoryLabel
+                      : showHistoryLabel
+                  }
+                />
+              )}
+            </Stack>
+            */}
+            <Dropdown
+              className={styles.chatSettingsSeparator}
+              defaultSelectedKeys={[gptModel]}
+              selectedKey={gptModel}
+              options={gpt_models}
+              onChange={onGptModelChange}
+            />
+          </div>
           {!messages || messages.length < 1 ? (
             <Stack className={styles.chatEmptyState}>
               <img
@@ -916,8 +917,7 @@ const UnauthChat = () => {
                     },
                     root: {
                       color: "#FFFFF",
-                      background:
-                        "radial-gradient(109.81% 107.82% at 100.1% 90.19%, #FFFFFF 33.63%, #000000 100%)",
+                      background: "#808080",  // 灰色の背景色に設定
                     },
                     rootDisabled: {
                       background: "#F0F0F0",
@@ -1044,13 +1044,14 @@ const UnauthChat = () => {
               </div>
             </Stack.Item>
           )}
-        {appStateContext?.state.isChatHistoryOpen &&
+        {true &&
           appStateContext?.state.isCosmosDBAvailable?.status !==
             CosmosDBStatus.NotConfigured && <ChatHistoryPanel />}
       </Stack>
+      {/*}
       <Panel
         headerText="チャット設定"
-        isOpen={isConfigPanelOpen}
+        isOpen={false}
         isBlocking={false}
         onDismiss={() => setIsConfigPanelOpen(false)}
         closeButtonAriaLabel="Close"
@@ -1069,31 +1070,8 @@ const UnauthChat = () => {
           options={gpt_models}
           onChange={onGptModelChange}
         />
-        <Dropdown
-          className={styles.chatSettingsSeparator}
-          defaultSelectedKeys={[gptModel]}
-          selectedKey={gptModel}
-          label="GPT Model:"
-          options={gpt_models}
-          onChange={onGptModelChange}
-        />
-        <Dropdown
-          className={styles.chatSettingsSeparator}
-          defaultSelectedKeys={[gptModel]}
-          selectedKey={gptModel}
-          label="GPT Model:"
-          options={gpt_models}
-          onChange={onGptModelChange}
-        />
-        <Dropdown
-          className={styles.chatSettingsSeparator}
-          defaultSelectedKeys={[gptModel]}
-          selectedKey={gptModel}
-          label="GPT Model:"
-          options={gpt_models}
-          onChange={onGptModelChange}
-        />
       </Panel>
+      */}
     </div>
   );
 };

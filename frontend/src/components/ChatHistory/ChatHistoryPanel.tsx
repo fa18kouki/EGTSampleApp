@@ -1,6 +1,6 @@
 import { CommandBarButton, ContextualMenu, DefaultButton, Dialog, DialogFooter, DialogType, ICommandBarStyles, IContextualMenuItem, IStackStyles, PrimaryButton, Spinner, SpinnerSize, Stack, StackItem, Text } from "@fluentui/react";
 import { useBoolean } from '@fluentui/react-hooks';
-
+import {Link} from "react-router-dom";
 import styles from "./ChatHistoryPanel.module.css"
 import { useContext } from "react";
 import { AppStateContext } from "../../state/AppProvider";
@@ -55,6 +55,8 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
     const handleHistoryClick = () => {
         appStateContext?.dispatch({ type: 'TOGGLE_CHAT_HISTORY' })
     };
+
+    
     
     const onShowContextualMenu = React.useCallback((ev: React.MouseEvent<HTMLElement>) => {
         ev.preventDefault(); // don't navigate
