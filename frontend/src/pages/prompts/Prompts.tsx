@@ -1,83 +1,276 @@
-import { useRef, useState, useEffect } from "react";
-import { TextField, Panel, DefaultButton } from "@fluentui/react";
-import { Dropdown, IDropdownOption } from "@fluentui/react/lib/Dropdown";
-import { Outlet, NavLink, Link } from "react-router-dom";
-import { SparkleFilled } from "@fluentui/react-icons";
+"use client";
+import React, { useState, useEffect } from "react";
 import styles from "./Prompts.module.css";
-import { QuestionInput } from "../../components/QuestionInput";
-import { PromptCard } from "../../components/PromptCard";
+import {
+  addPrompt,
+  getPrompts,
+  deletePrompt,
+} from "../../api";
+interface Prompt {
+  id: number | null;
+  userName: string;
+  preview?: string;
+  tags: string[];
+  content: string;
+}
 
-const Prompt = () => {
+interface NewPrompt {
+  userName: string;
+  content: string;
+  tags: string[];
+}
 
-    return (
-        <div>
-            <section className={styles.container}>
-                <div className={styles.prompts}>
-                <PromptCard
-    name="山田太郎"
-    documentTitle="プロジェクト提案書作成ガイド"
-    documentContent="プロジェクトの目的、背景、期待される成果を明確に記述しましょう。また、具体的なアクションプランとタイムラインを設定することが重要です。"
-/>
-<PromptCard
-    name="佐藤花子"
-    documentTitle="業務報告書の書き方"
-    documentContent="業務の進捗状況、達成した成果、遭遇した問題点、そして次のステップについて具体的に記述します。"
-/>
-<PromptCard
-    name="鈴木一郎"
-    documentTitle="会議議事録の効果的な作成方法"
-    documentContent="会議での重要な議論ポイント、決定事項、行動計画について簡潔かつ正確に記録を取ります。参加者の発言は要約し、決定された事項は明確に記載します。"
-/>
-<PromptCard
-    name="高橋由美子"
-    documentTitle="顧客への提案書のポイント"
-    documentContent="顧客のニーズや問題点を理解し、それに対するソリューションを提案します。提案の利点と効果を具体的に述べ、信頼性のあるデータを用いて支持します。"
-/>
-<PromptCard
-    name="伊藤健太"
-    documentTitle="メールでのビジネスコミュニケーション"
-    documentContent="メールの件名は具体的かつ簡潔に。本文では挨拶から始め、要点を明確に伝えます。最後に、必要なアクションや返信期限を記載しましょう。"
-/>
-<PromptCard
-    name="渡辺真理"
-    documentTitle="プレゼンテーション資料の作り方"
-    documentContent="聴衆の注意を引くために、視覚的に魅力的なスライドを作成します。ポイントは簡潔に、そして重要な情報は強調して表示しましょう。"
-/>
-<PromptCard
-    name="中村輝"
-    documentTitle="年次報告書の構成要素"
-    documentContent="年次報告書では、組織の年間の業績、財務状況、市場での位置づけ、将来の見通しについて詳細に報告します。"
-/>
-<PromptCard
-    name="小林雅"
-    documentTitle="クライアントミーティングの準備"
-    documentContent="このプロンプトは、特定のゴールを達成するための変数を明確にし、その変数を通じて具体的な成果物を出力するプロセスを案内します。
-    ===========================
-    
-    # 変数の定義:
-    ユーザーの回答やChatGPTの提案を格納する変数: project_variables
-    
-    # ステップ1: ゴールの特定
-    「ゴールは何ですか？」と私に質問してください。
-    ユーザーからの回答を基に、ゴール達成のための手順を提案します。
-    
-    # ステップ2: 手順の明確化
-    提案された手順に対して、各ステップの詳細や変数を具体的に定めていきます。
-    出力形式はテーブル形式として、1列目に手順、2列目にその内容、3列目に変数、4列目に値を記録します。
-    
-    # ステップ3: 変数の埋め込み
-    変数に関連する提案や質問を行いながら、必要な情報を集約して変数の値を埋めていきます。
-    
-    # 制約 : すべての変数の値が定まったとき、最終的なプロンプトや成果物を出力します。
-    
-    ===========================
-    ステップ1に進むため、「ゴールは何ですか？」と私に質問してください。"
-/>
+const MainComponent: React.FC = () => {
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [selectedPrompt, setSelectedPrompt] = useState<Prompt | null>(null);
+  const [showAddModal, setShowAddModal] = useState<boolean>(false);
+  const [showEditModal, setShowEditModal] = useState<boolean>(false);
+  const [newPrompt, setNewPrompt] = useState<NewPrompt>({ userName: "", content: "", tags: [""] });
+  const [editPrompt, setEditPrompt] = useState<Prompt>({ id: null, userName: "", content: "", tags: [""] });
+  const [prompts, setPrompts] = useState<Prompt[]>([
+  ]);
 
-                </div>
-            </section>
-        </div>
+  useEffect(() => {
+    const fetchPrompts = async () => {
+      const response = await getPrompts();
+      if (response.status === 200) {
+        const data = await response.json(); 
+        setPrompts(data); 
+      } else {
+        console.error("プロンプトの取得に失敗しました。");
+      }
+    };
+
+    fetchPrompts();
+  }, []);
+  
+
+  const handleAddPrompt = async (newPrompt:NewPrompt) => {
+    let response = await addPrompt(
+      newPrompt.userName,
+      newPrompt.content,
+      newPrompt.tags,
     );
-};
+    if (response.status === 200) {
+      const data = await response.json();
+      setNewPrompt(data);
+    }
+    else{
+      console.log("Error");
+      
+    }
+    setShowAddModal(false);
+  };
 
-export default Prompt;
+  const handleSubmit = (): void => {
+    prompts.push({
+      id: prompts.length + 1,
+      userName: newPrompt.userName,
+      content: newPrompt.content,
+      tags: newPrompt.tags,
+      preview: newPrompt.content.slice(0, 10) + "...",
+    }); 
+    setNewPrompt({ userName: "", content: "", tags: [""] });
+    setShowAddModal(false);
+  };
+
+  const handleEditPrompt = (prompt: Prompt): void => {
+    setEditPrompt({
+      id: prompt.id,
+      userName: prompt.userName,
+      content: prompt.content,
+      tags: prompt.tags,
+    });
+    setShowEditModal(true);
+  };
+
+  const handleUpdatePrompt = (): void => {
+    const updatedPrompts = prompts.map((prompt) => {
+      if (prompt.id === editPrompt.id) {
+        return {
+          ...prompt,
+          userName: editPrompt.userName,
+          content: editPrompt.content,
+          tags: editPrompt.tags,
+          preview: editPrompt.content.slice(0, 10) + "...",
+        };
+      }
+      return prompt;
+    });
+    setSelectedPrompt(null);
+    setShowEditModal(false);
+  };
+
+  const filteredPrompts = prompts.filter((prompt) =>
+    prompt.tags.some((tag) =>
+      tag.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  );
+
+  return (
+    <div className={styles.container}>
+      <div className={styles.searchSection}>
+        <input
+          type="text"
+          placeholder="タグで検索"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className={styles.input}
+        />
+      </div>
+      <button
+        onClick={() => setShowAddModal(true)}
+        className={styles.addButton}
+      >
+        プロンプトを追加
+      </button>
+      <div className={styles.promptsGrid}>
+        {filteredPrompts.map((prompt) => (
+          <div
+            key={prompt.id}
+            className={styles.promptCard}
+            onClick={() => setSelectedPrompt(prompt)}
+          >
+            <h3 className={styles.promptTitle}>
+              {prompt.userName}
+            </h3>
+            <p className={styles.promptPreview}>{prompt.preview}</p>
+            <div className={styles.tagContainer}>
+              {prompt.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className={styles.tag}
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+            <button
+              className={styles.editButton}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEditPrompt(prompt);
+              }}
+            >
+              編集
+            </button>
+          </div>
+        ))}
+      </div>
+      {selectedPrompt && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <h2 className={styles.modalTitle}>
+              {selectedPrompt.userName}
+            </h2>
+            <p className={styles.modalText}>{selectedPrompt.content}</p>
+            <button
+              className={styles.closeButton}
+              onClick={() => setSelectedPrompt(null)}
+            >
+              閉じる
+            </button>
+          </div>
+        </div>
+      )}
+      {showAddModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <input
+              type="text"
+              placeholder="ユーザー名"
+              value={newPrompt.userName}
+              onChange={(e) =>
+                setNewPrompt({ ...newPrompt, userName: e.target.value })
+              }
+              className={styles.modalInput}
+              name="userName"
+            />
+            <textarea
+              placeholder="商品の内容"
+              value={newPrompt.content}
+              onChange={(e) =>
+                setNewPrompt({ ...newPrompt, content: e.target.value })
+              }
+              className={styles.modalInput}
+              name="content"
+            ></textarea>
+            <input
+              type="text"
+              placeholder="タグ (カンマ区切り)"
+              value={newPrompt.tags}
+              onChange={(e) =>
+                setNewPrompt({ ...newPrompt, tags: e.target.value.split(",") })
+              }
+              className={styles.modalInput}
+              name="tags"
+            />
+            <button
+              className={styles.createButton}
+              onClick={() => handleAddPrompt(newPrompt)}
+            >
+              作成
+            </button>
+            <button
+              className={styles.cancelButton}
+              onClick={() => setShowAddModal(false)}
+            >
+              キャンセル
+            </button>
+          </div>
+        </div>
+      )}
+      {showEditModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <input
+              type="text"
+              placeholder="ユーザー名"
+              value={editPrompt.userName}
+              onChange={(e) =>
+                setEditPrompt({ ...editPrompt, userName: e.target.value })
+              }
+              className={styles.modalInput}
+              name="userName"
+            />
+            <textarea
+              placeholder="商品の内容"
+              value={editPrompt.content}
+              onChange={(e) =>
+                setEditPrompt({ ...editPrompt, content: e.target.value })
+              }
+              className={styles.modalInput}
+              name="content"
+            />
+            <input
+              type="text"
+              placeholder="タグ (カンマ区切り)"
+              value={editPrompt.tags}
+              onChange={(e) =>
+                setEditPrompt({ ...editPrompt, tags: e.target.value.split(",") })
+              }
+              className={styles.modalInput}
+              name="tags"
+            />
+            <button
+              className={styles.updateButton}
+              onClick={handleUpdatePrompt}
+            >
+              更新
+            </button>
+            <button
+              className={styles.cancelButton}
+              onClick={
+                () => setShowEditModal(false)
+              }
+            >
+              キャンセル
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default MainComponent;

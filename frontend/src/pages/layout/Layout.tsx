@@ -6,7 +6,7 @@ import { Dialog, Stack, TextField } from "@fluentui/react";
 import { useContext, useEffect, useState } from "react";
 import { HistoryButton, ShareButton } from "../../components/common/Button";
 import { AppStateContext } from "../../state/AppProvider";
-import { CosmosDBStatus } from "../../api";
+import { CosmosDBStatus, Logout, GetUserInfo} from "../../api";
 
 const Layout = () => {
   const [isSharePanelOpen, setIsSharePanelOpen] = useState<boolean>(false);
@@ -19,9 +19,19 @@ const Layout = () => {
     useState<string>("Show chat history");
   const appStateContext = useContext(AppStateContext);
   const ui = appStateContext?.state.frontendSettings?.ui;
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   const handleShareClick = () => {
     setIsSharePanelOpen(true);
+  };  
+
+  const checkAuthentication = async () => {
+    const isAuthenticated = await GetUserInfo();
+    return isAuthenticated ? true : false;
+  };
+
+  const handleLogout = () => {
+    Logout();
   };
 
   const handleSharePanelDismiss = () => {
@@ -38,6 +48,14 @@ const Layout = () => {
   const handleHistoryClick = () => {
     appStateContext?.dispatch({ type: "TOGGLE_CHAT_HISTORY" });
   };
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const authenticated = await checkAuthentication();
+      setIsAuthenticated(authenticated);
+    };
+    checkAuth();
+  }, []);
 
   useEffect(() => {
     if (copyClicked) {
@@ -153,6 +171,22 @@ const Layout = () => {
                 </li>
               </ul>
             </nav>
+            <div>
+              {isAuthenticated ? (
+                <div className={styles.dropdown}>
+                  <button className={styles.dropbtn}>アカウント</button>
+                  <div className={styles.dropdownContent}>
+                    <Link to="/my_page">マイページ</Link>
+                    <button onClick={handleLogout}>ログアウト</button>
+                  </div>
+                </div>
+              ) : (
+                <Link to="/login" className={styles.loginLink}>ログイン</Link>
+              )}
+            </div>
+            <Link to="/user_page" className={styles.headerTitleContainer}>
+              <h3 className={styles.headerTitle}>EGT-GPT</h3>
+            </Link>
           </div>
         </div>
       </header>
