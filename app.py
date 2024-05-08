@@ -20,7 +20,7 @@ from quart import (
 
 from openai import AsyncAzureOpenAI
 from azure.identity.aio import DefaultAzureCredential, get_bearer_token_provider
-from backend.auth.cosmosdbservice import CosmosUserClient
+from backend.auth.auth_utils import get_authenticated_user_details
 from backend.history.cosmosdbservice import CosmosConversationClient
 from backend.prompt.cosmosdbservice import CosmosPromptClient
 from backend.utils import (
@@ -429,21 +429,6 @@ async def conversation_internal(request_body):
         else:
             return jsonify({"error": str(ex)}), 500
 
-async def isLogin():
-    if 'username' in session:
-        return True
-    return False
-
-async def get_authenticated_user_details(session):
-    cosmos_user_client = init_user_cosmosdb_client()
-    if not cosmos_user_client:
-        raise Exception("CosmosDB is not configured or not working")
-    
-    user = await cosmos_user_client.get_authenticated_user(session['user_id'])
-    if not user:
-        raise Exception("User not found")
-    return user
-    
 
 @bp.route("/conversation", methods=["POST"])
 async def conversation():
@@ -678,10 +663,6 @@ async def delete_conversation():
 @bp.route("/history/list", methods=["GET"])
 async def list_conversations():
     offset = request.args.get("offset", 0)
-    limit = request.args.get("limit", 25)
-    logging.debug(f"offset: {offset}, limit: {limit}")
-    logging.debug(f"request headers: {request.headers}")
-    logging.debug(f"request args: {request.args}")
     authenticated_user = get_authenticated_user_details(
         request_headers=request.headers
     )
