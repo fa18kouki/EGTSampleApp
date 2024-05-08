@@ -1,4 +1,5 @@
-FROM node:20-alpine AS frontend  
+# ARMアーキテクチャ用のNode.jsイメージを指定
+FROM --platform=linux/arm64 node:20-alpine AS frontend  
 RUN mkdir -p /home/node/app/node_modules && chown -R node:node /home/node/app
 
 WORKDIR /home/node/app 
@@ -10,7 +11,8 @@ COPY --chown=node:node ./static/ ./static
 WORKDIR /home/node/app/frontend
 RUN npm run build
   
-FROM python:3.11-alpine 
+# ARMアーキテクチャ用のPythonイメージを指定
+FROM --platform=linux/arm64 python:3.11-alpine 
 RUN apk add --no-cache --virtual .build-deps \  
     build-base \  
     libffi-dev \  

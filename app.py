@@ -15,6 +15,7 @@ from quart import (
     render_template,
     session,
     url_for,
+    redirect,
 )
 
 from openai import AsyncAzureOpenAI
@@ -677,8 +678,13 @@ async def delete_conversation():
 @bp.route("/history/list", methods=["GET"])
 async def list_conversations():
     offset = request.args.get("offset", 0)
+    limit = request.args.get("limit", 25)
+    logging.debug(f"offset: {offset}, limit: {limit}")
+    logging.debug(f"request headers: {request.headers}")
+    logging.debug(f"request args: {request.args}")
     authenticated_user = get_authenticated_user_details(
-        request_headers=request.headers)
+        request_headers=request.headers
+    )
     user_id = authenticated_user["user_principal_id"]
 
     # make sure cosmos is configured
