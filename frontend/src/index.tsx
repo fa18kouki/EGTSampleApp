@@ -7,11 +7,8 @@ import "./index.css";
 import Prompts from "./pages/prompts/Prompts";
 import Layout from "./pages/layout/Layout";
 import NoPage from "./pages/NoPage";
-import Chat from "./pages/chat/Chat";
 import UnauthChat from "./pages/unauth_chat/UnauthChat";
-import UserPage from "./pages/user_page/UserPage";
 import { AppStateProvider } from "./state/AppProvider";
-import Login from "./pages/login/Login";
 
 initializeIcons();
 
@@ -21,11 +18,8 @@ export default function App() {
             <HashRouter>
                 <Routes>
                     <Route path="/" element={<Layout />}>
-                        <Route index element={<Chat />} />
-                        <Route path="unauth_chat" element={<UnauthChat />} />
-                        <Route path="user_page" element={<UserPage />} />
+                        <Route index element={<UnauthChat />} />
                         <Route path="prompts" element={<Prompts />} />
-                        <Route path="login" element={<Login />} />
                         <Route path="*" element={<NoPage />} />
                     </Route>
                 </Routes>
