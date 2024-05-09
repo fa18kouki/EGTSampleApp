@@ -88,65 +88,15 @@ const Layout = () => {
     <div className={styles.layout}>
       <header className={styles.header} role={"banner"}>
         <div className={styles.headerContainer}>
-          {/* ここにコードを挿入します 
-          <Stack
-            horizontal
-            verticalAlign="center"
-            horizontalAlign="space-between"
-          >
-            <Stack horizontal verticalAlign="center">
-              <img
-                src={ui?.logo ? ui.logo : Contoso}
-                className={styles.headerIcon}
-                aria-hidden="true"
-              />
-              <Link to="/" className={styles.headerTitleContainer}>
-                <h1 className={styles.headerTitle}>{ui?.title}</h1>
-              </Link>
-            </Stack>
-            <Stack
-              horizontal
-              tokens={{ childrenGap: 4 }}
-              className={styles.shareButtonContainer}
-            >
-              {appStateContext?.state.isCosmosDBAvailable?.status !==
-                CosmosDBStatus.NotConfigured && (
-                <HistoryButton
-                  onClick={handleHistoryClick}
-                  text={
-                    appStateContext?.state?.isChatHistoryOpen
-                      ? hideHistoryLabel
-                      : showHistoryLabel
-                  }
-                />
-              )}
-              {ui?.show_share_button && (
-                <ShareButton onClick={handleShareClick} text={shareLabel} />
-              )}
-            </Stack>
-          </Stack>
-          */}
           <div className={styles.headerContainer}>
             <Link to="/" className={styles.headerTitleContainer}>
               <h3 className={styles.headerTitle}>EGT-GPT</h3>
             </Link>
             <nav>
               <ul className={styles.headerNavList}>
-                <li className={styles.headerNavRightMargin}>
-                  <NavLink
-                    to="/"
-                    className={({ isActive }) =>
-                      isActive
-                        ? styles.headerNavPageLinkActive
-                        : styles.headerNavPageLink
-                    }
-                  >
-                    企業内向けChat
-                  </NavLink>
-                </li>
                 <li className={styles.headerNavList}>
                   <NavLink
-                    to="/unauth_chat"
+                    to="/"
                     className={({ isActive }) =>
                       isActive
                         ? styles.headerNavPageLinkActive
@@ -171,74 +121,10 @@ const Layout = () => {
                 </li>
               </ul>
             </nav>
-            <div>
-              {isAuthenticated ? (
-                <div className={styles.dropdown}>
-                  <button className={styles.dropbtn}>アカウント</button>
-                  <div className={styles.dropdownContent}>
-                    <Link to="/my_page">マイページ</Link>
-                    <button onClick={handleLogout}>ログアウト</button>
-                  </div>
-                </div>
-              ) : (
-                <Link to="/login" className={styles.loginLink}>ログイン</Link>
-              )}
-            </div>
-            <Link to="/user_page" className={styles.headerTitleContainer}>
-              <h3 className={styles.headerTitle}>EGT-GPT</h3>
-            </Link>
           </div>
         </div>
       </header>
       <Outlet />
-      {/* 
-      <Dialog
-        onDismiss={handleSharePanelDismiss}
-        hidden={!isSharePanelOpen}
-        styles={{
-          main: [
-            {
-              selectors: {
-                ["@media (min-width: 480px)"]: {
-                  maxWidth: "600px",
-                  background: "#FFFFFF",
-                  boxShadow:
-                    "0px 14px 28.8px rgba(0, 0, 0, 0.24), 0px 0px 8px rgba(0, 0, 0, 0.2)",
-                  borderRadius: "8px",
-                  maxHeight: "200px",
-                  minHeight: "100px",
-                },
-              },
-            },
-          ],
-        }}
-        dialogContentProps={{
-          title: "Share the web app",
-          showCloseButton: true,
-        }}
-      >
-        <Stack horizontal verticalAlign="center" style={{ gap: "8px" }}>
-          <TextField
-            className={styles.urlTextBox}
-            defaultValue={window.location.href}
-            readOnly
-          />
-          <div
-            className={styles.copyButtonContainer}
-            role="button"
-            tabIndex={0}
-            aria-label="Copy"
-            onClick={handleCopyClick}
-            onKeyDown={(e) =>
-              e.key === "Enter" || e.key === " " ? handleCopyClick() : null
-            }
-          >
-            <CopyRegular className={styles.copyButton} />
-            <span className={styles.copyButtonText}>{copyText}</span>
-          </div>
-        </Stack>
-      </Dialog>
-      */}
     </div>
   );
 };
