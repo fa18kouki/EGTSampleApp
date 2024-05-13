@@ -27,7 +27,7 @@ import uuid from "react-uuid";
 import { isEmpty } from "lodash-es";
 import DOMPurify from "dompurify";
 import styles from "./UnauthChat.module.css";
-import Contoso from "../../assets/Contoso.svg";
+import EGTLogo from "../../assets/EGTLogo.svg";
 import { XSSAllowTags } from "../../constants/xssAllowTags";
 import { HistoryButton } from "../../components/common/Button";
 import {
@@ -52,6 +52,9 @@ import { ChatHistoryPanel } from "../../components/ChatHistory/ChatHistoryPanel"
 import { AppStateContext } from "../../state/AppProvider";
 import { useBoolean } from "@fluentui/react-hooks";
 import { SettingsButton } from "../../components/SettingsButton";
+import fv_text1_black from "../../assets/fv_text1_black.png";
+import fv_text2_black from "../../assets/fv_text2_black.png";
+import fv_text3_black from "../../assets/fv_text3_black.png";
 
 const enum messageStatus {
   NotRunning = "Not Running",
@@ -114,9 +117,9 @@ const UnauthChat = () => {
   };
 
   const gpt_models: IDropdownOption[] = [
-    { key: "gpt-3.5-turbo-16k", text: "gpt-3.5-turbo-16k" },
-    { key: "gpt-4", text: "gpt-4" },
-    { key: "gpt-4-32k", text: "gpt-4-32k" },
+    { key: "gpt-3.5-turbo-16k", text: "GPT-3.5-TURBO16K" },
+    { key: "gpt-4", text: "GPT-4" },
+    { key: "gpt-4-32k", text: "GPT-4-32K" },
   ];
 
   useEffect(() => {
@@ -798,7 +801,7 @@ const UnauthChat = () => {
             </Stack>
             */}
             <Dropdown
-              className={styles.chatSettingsSeparator}
+              className={styles.dropdownCustom}
               defaultSelectedKeys={[gptModel]}
               selectedKey={gptModel}
               options={gpt_models}
@@ -808,7 +811,17 @@ const UnauthChat = () => {
           {!messages || messages.length < 1 ? (
             <Stack className={styles.chatEmptyState}>
               <img
-                src={ui?.chat_logo ? ui.chat_logo : Contoso}
+                src={fv_text1_black}
+                className={styles.chatIcon}
+                aria-hidden="true"
+              />
+              <img
+                src={fv_text2_black}
+                className={styles.chatIcon}
+                aria-hidden="true"
+              />
+              <img
+                src={fv_text3_black}
                 className={styles.chatIcon}
                 aria-hidden="true"
               />
@@ -917,7 +930,7 @@ const UnauthChat = () => {
                     },
                     root: {
                       color: "#FFFFF",
-                      background: "#808080",  // 灰色の背景色に設定
+                      background: "#808080", // 灰色の背景色に設定
                     },
                     rootDisabled: {
                       background: "#F0F0F0",
@@ -975,10 +988,13 @@ const UnauthChat = () => {
               clearOnSend
               placeholder="Type a new question..."
               disabled={isLoading}
-              onSend={(question, id) => {
-                appStateContext?.state.isCosmosDBAvailable?.cosmosDB
-                  ? makeApiRequestWithCosmosDB(question, id)
-                  : makeApiRequestWithoutCosmosDB(question, id);
+              onSend={(question, file, id) => {
+                // API呼び出し関数を更新して、ファイルも引数として渡す
+                if (appStateContext?.state.isCosmosDBAvailable?.cosmosDB) {
+                  makeApiRequestWithCosmosDB(question, id); // Updated to include file
+                } else {
+                  makeApiRequestWithoutCosmosDB(question, id); // Updated to include file
+                }
               }}
               conversationId={
                 appStateContext?.state.currentChat?.id

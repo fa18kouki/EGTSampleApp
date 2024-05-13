@@ -5,7 +5,7 @@ import Send from "../../assets/Send.svg";
 import styles from "./QuestionInput.module.css";
 
 interface Props {
-    onSend: (question: string, id?: string) => void;
+    onSend: (question: string, file: File | null, id?: string) => void;
     disabled: boolean;
     placeholder?: string;
     clearOnSend?: boolean;
@@ -14,20 +14,22 @@ interface Props {
 
 export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conversationId }: Props) => {
     const [question, setQuestion] = useState<string>("");
+    const [file, setFile] = useState<File | null>(null);
 
     const sendQuestion = () => {
-        if (disabled || !question.trim()) {
+        if (disabled || (!question.trim() && !file)) {
             return;
         }
 
-        if(conversationId){
-            onSend(question, conversationId);
-        }else{
-            onSend(question);
+        if (conversationId) {
+            onSend(question, file, conversationId);
+        } else {
+            onSend(question, file);
         }
 
         if (clearOnSend) {
             setQuestion("");
+            setFile(null);
         }
     };
 
@@ -42,7 +44,12 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
         setQuestion(newValue || "");
     };
 
-    const sendQuestionDisabled = disabled || !question.trim();
+    const onFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files ? event.target.files[0] : null;
+        setFile(file);
+    };
+
+    const sendQuestionDisabled = disabled || (!question.trim() && !file);
 
     return (
         <Stack horizontal className={styles.questionInputContainer}>
@@ -52,9 +59,16 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
                 multiline
                 resizable={false}
                 borderless
+                autoAdjustHeight
                 value={question}
                 onChange={onQuestionChange}
                 onKeyDown={onEnterPress}
+            />
+            <input
+                type="file"
+                onChange={onFileChange}
+                disabled={disabled}
+                className={styles.fileInput}
             />
             <div className={styles.questionInputSendButtonContainer} 
                 role="button" 

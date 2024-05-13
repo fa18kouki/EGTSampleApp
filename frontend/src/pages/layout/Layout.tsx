@@ -7,6 +7,7 @@ import { useContext, useEffect, useState } from "react";
 import { HistoryButton, ShareButton } from "../../components/common/Button";
 import { AppStateContext } from "../../state/AppProvider";
 import { CosmosDBStatus, Logout, GetUserInfo} from "../../api";
+import  EGTLogo from "../../assets/EGTLogo.svg";
 
 const Layout = () => {
   const [isSharePanelOpen, setIsSharePanelOpen] = useState<boolean>(false);
@@ -90,7 +91,8 @@ const Layout = () => {
         <div className={styles.headerContainer}>
           <div className={styles.headerContainer}>
             <Link to="/" className={styles.headerTitleContainer}>
-              <h3 className={styles.headerTitle}>EGT-GPT</h3>
+              <img src={EGTLogo} className={styles.headerLogo} alt="EGT Logo" />
+             {/*  <h3 className={styles.headerTitle}>EGT-GPT</h3> */}
             </Link>
             <nav>
               <ul className={styles.headerNavList}>

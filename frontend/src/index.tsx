@@ -8,6 +8,7 @@ import Prompts from "./pages/prompts/Prompts";
 import Layout from "./pages/layout/Layout";
 import NoPage from "./pages/NoPage";
 import UnauthChat from "./pages/unauth_chat/UnauthChat";
+import AuthChat from "./pages/auth_chat/AuthChat";
 import { AppStateProvider } from "./state/AppProvider";
 
 initializeIcons();
@@ -19,6 +20,7 @@ export default function App() {
                 <Routes>
                     <Route path="/" element={<Layout />}>
                         <Route index element={<UnauthChat />} />
+                        <Route path="chat" element={<AuthChat />} />
                         <Route path="prompts" element={<Prompts />} />
                         <Route path="*" element={<NoPage />} />
                     </Route>
