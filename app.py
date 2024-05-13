@@ -19,6 +19,7 @@ from quart import (
 )
 
 from openai import AsyncAzureOpenAI
+from backend.auth.auth_utils import get_authenticated_user_details
 from azure.identity.aio import DefaultAzureCredential, get_bearer_token_provider
 from backend.auth.cosmosdbservice import CosmosUserClient
 from backend.history.cosmosdbservice import CosmosConversationClient
@@ -28,7 +29,7 @@ from backend.utils import (
     format_stream_response,
     generateFilterString,
     parse_multi_columns,
-    format_non_streaming_response,
+    format_non_streaming_response,    
 )
 
 bp = Blueprint("routes", __name__, static_folder="static",
@@ -433,16 +434,6 @@ async def isLogin():
     if 'username' in session:
         return True
     return False
-
-async def get_authenticated_user_details(session):
-    cosmos_user_client = init_user_cosmosdb_client()
-    if not cosmos_user_client:
-        raise Exception("CosmosDB is not configured or not working")
-    
-    user = await cosmos_user_client.get_authenticated_user(session['user_id'])
-    if not user:
-        raise Exception("User not found")
-    return user
     
 
 @bp.route("/conversation", methods=["POST"])

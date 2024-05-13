@@ -19,6 +19,27 @@
     height: 1px;
     background: #D1D1D1;
     margin-top: 20px;
+
+}
+
+/* Dropdown スタイルのカスタマイズ */
+.dropdownCustom {
+    font-family: 'Arial', sans-serif; /* フォントを変更 */
+    font-size: 14px; /* フォントサイズを調整 */
+    color: #333; /* フォントカラーを調整 */
+    border: none; /* 枠線を削除 */
+    outline: none; /* アウトラインを削除 */
+    width: 200px; /* 幅を調整 */
+    height: 32px; /* 高さを調整 */
+    background-color: transparent; /* 背景色を透明に */
+}
+
+.dropdownCustom .ms-Dropdown-title {
+    padding: 0 10px; /* タイトルのパディングを調整 */
+}
+
+.dropdownCustom .ms-Dropdown-caretDownWrapper {
+    top: 8px; /* 矢印の位置を調整 */
 }
 
 .chatContainer {
@@ -66,7 +87,7 @@
 }
 
 .chatIcon {
-    height: 62px;
+    animation: fadeIn 1s ease-in-out;
     width: auto;
 }
 
