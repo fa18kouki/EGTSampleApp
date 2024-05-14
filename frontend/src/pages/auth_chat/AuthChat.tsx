@@ -800,13 +800,22 @@ const AuthChat = () => {
               )}
             </Stack>
             */}
-            <Dropdown
+            <select
               className={styles.dropdownCustom}
-              defaultSelectedKeys={[gptModel]}
-              selectedKey={gptModel}
-              options={gpt_models}
-              onChange={onGptModelChange}
-            />
+              value={gptModel}
+              onChange={(e) =>
+                onGptModelChange(undefined, {
+                  key: e.target.value,
+                  text: e.target.options[e.target.selectedIndex].text,
+                })
+              }
+            >
+              {gpt_models.map((model) => (
+                <option key={model.key} value={model.key}>
+                  {model.text}
+                </option>
+              ))}
+            </select>
           </div>
           {!messages || messages.length < 1 ? (
             <Stack className={styles.chatEmptyState}>
@@ -1080,7 +1089,7 @@ const AuthChat = () => {
       >
         <Dropdown
           className={styles.chatSettingsSeparator}
-          defaultSelectedKeys={[gptModel]}
+          defaultSelectedKey={[gptModel]}
           selectedKey={gptModel}
           label="GPT Model:"
           options={gpt_models}

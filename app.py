@@ -444,7 +444,6 @@ async def conversation():
 
     return await conversation_internal(request_json)
 
-"""
 @bp.route("/frontend_settings", methods=["GET"])
 def get_frontend_settings():
     try:
@@ -453,7 +452,6 @@ def get_frontend_settings():
         logging.exception("Exception in /frontend_settings")
         return jsonify({"error": str(e)}), 500
 
-"""
 ## Conversation History API ##
 @bp.route("/history/generate", methods=["POST"])
 async def add_conversation():
