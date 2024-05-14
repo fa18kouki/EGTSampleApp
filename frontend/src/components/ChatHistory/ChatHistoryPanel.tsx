@@ -174,7 +174,7 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
                     </>}
                 </Stack>
             </Stack>
-            <Dialog
+            <Dialog　
                 hidden={hideClearAllDialog}
                 onDismiss={clearing ? ()=>{} : onHideClearAllDialog}
                 dialogContentProps={clearAllDialogContentProps}
