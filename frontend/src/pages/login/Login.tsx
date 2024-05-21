@@ -4,7 +4,7 @@ import {
   onAuthStateChanged,
   User
 } from "firebase/auth";
-import { auth } from "../FirebaseConfig";
+import { auth } from "../../../FirebaseConfig";
 import { Navigate, Link } from "react-router-dom";
 
 const Login: React.FC = () => {

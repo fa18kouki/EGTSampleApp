@@ -22,11 +22,12 @@ export default function App() {
             <HashRouter>
                 <Routes>
                     <Route path="/" element={<Layout />}>
-                        <Route index element={<Mypage />} />
+                        <Route index element={<AuthChat />} />
                         <Route path="login" element={<Login />} />
+                        <Route path="chat" element={<UnauthChat />} />
                         <Route path="signup" element={<SignUp/>} />
-                        <Route path="chat" element={<AuthChat />} />
                         <Route path="prompts" element={<Prompts />} />
+                        <Route path="mypage" element={<Mypage />} />
                         <Route path="*" element={<NoPage />} />
                     </Route>
                 </Routes>

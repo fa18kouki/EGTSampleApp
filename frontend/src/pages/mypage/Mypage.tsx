@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
-import { auth } from "../FirebaseConfig";
+import { auth } from "../../../FirebaseConfig";
 import { useNavigate, Navigate } from "react-router-dom";
 
 const Mypage: React.FC = () => {

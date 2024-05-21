@@ -17,11 +17,8 @@ from quart import (
     url_for,
     redirect,
 )
-
 from openai import AsyncAzureOpenAI
-from backend.auth.auth_utils import get_authenticated_user_details
-from azure.identity.aio import DefaultAzureCredential, get_bearer_token_provider
-from backend.auth.cosmosdbservice import CosmosUserClient
+from backend.auth.auth_utils import get_authenticated_user_details, fetch_users
 from backend.history.cosmosdbservice import CosmosConversationClient
 from backend.prompt.cosmosdbservice import CosmosPromptClient
 from backend.utils import (
@@ -290,31 +287,6 @@ def init_prompt_cosmosdb_client():
 
     return cosmos_prompt_client
 
-def init_user_cosmosdb_client():
-    cosmos_user_client = None
-    try:
-        cosmos_endpoint = (
-            f"https://{AZURE_COSMOSDB_ACCOUNT}.documents.azure.com:443/"
-        )
-
-        if not AZURE_COSMOSDB_ACCOUNT_KEY:
-            credential = DefaultAzureCredential()
-        else:
-            credential = AZURE_COSMOSDB_ACCOUNT_KEY
-
-        cosmos_user_client = CosmosUserClient(
-            cosmosdb_endpoint=cosmos_endpoint,
-            credential=credential,
-            database_name=AZURE_COSMOSDB_DATABASE,
-            container_name=AZURE_COSMOSDB_PROMPTS_CONTAINER,
-        )
-    except Exception as e:
-        logging.exception("Exception in CosmosDB initialization", e)
-        cosmos_user_client = None
-        raise e
-
-    return cosmos_user_client
-
 def prepare_model_args(request_body):
     request_messages = request_body.get("messages", [])
     # gptModel= AZURE_OPENAI_GPT35_TURBO_16K_DEPLOYMENT
@@ -430,27 +402,32 @@ async def conversation_internal(request_body):
         else:
             return jsonify({"error": str(ex)}), 500
 
-async def isLogin():
-    if 'username' in session:
-        return True
-    return False
-    
-
+# 会話エンドポイントのルートを定義
 @bp.route("/conversation", methods=["POST"])
 async def conversation():
+    # リクエストがJSON形式であることを確認
     if not request.is_json:
         return jsonify({"error": "request must be json"}), 415
+    
+    # リクエストのJSONデータを取得
     request_json = await request.get_json()
 
+    # 内部の会話処理関数を呼び出し、その結果を返す
     return await conversation_internal(request_json)
 
 @bp.route("/frontend_settings", methods=["GET"])
 def get_frontend_settings():
     try:
         return jsonify(frontend_settings), 200
+    except KeyError as e:
+        logging.exception("KeyError in /frontend_settings")
+        return jsonify({"error": f"Key not found: {str(e)}"}), 400
+    except TypeError as e:
+        logging.exception("TypeError in /frontend_settings")
+        return jsonify({"error": f"Type error: {str(e)}"}), 400
     except Exception as e:
         logging.exception("Exception in /frontend_settings")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "An unexpected error occurred"}), 500
 
 ## Conversation History API ##
 @bp.route("/history/generate", methods=["POST"])
@@ -667,15 +644,11 @@ async def delete_conversation():
 @bp.route("/history/list", methods=["GET"])
 async def list_conversations():
     offset = request.args.get("offset", 0)
-    limit = request.args.get("limit", 25)
-    logging.debug(f"offset: {offset}, limit: {limit}")
-    logging.debug(f"request headers: {request.headers}")
-    logging.debug(f"request args: {request.args}")
+    logging.info(f"ヘッダー、offset: {request.headers,offset}")
     authenticated_user = get_authenticated_user_details(
-        request_headers=request.headers
-    )
+        request_headers=request.headers)
     user_id = authenticated_user["user_principal_id"]
-
+    logging.info(f"ユーザーID: {user_id}")
     # make sure cosmos is configured
     cosmos_conversation_client = init_conversation_cosmosdb_client()
     if not cosmos_conversation_client:
@@ -699,8 +672,7 @@ async def get_conversation():
     authenticated_user = get_authenticated_user_details(
         request_headers=request.headers)
     user_id = authenticated_user["user_principal_id"]
-
-    # check request for conversation_id
+    # check request for conversation_id 
     request_json = await request.get_json()
     conversation_id = request_json.get("conversation_id", None)
 
@@ -964,6 +936,7 @@ async def add_prompt():
         return jsonify({"error": str(e)}), 500
 
 ##Auth API ##
+'''
 @bp.route("/auth/login", methods=["POST"])
 async def login_route():
     async def login():
@@ -982,24 +955,42 @@ async def logout_route():
     response.set_cookie('session', '', expires=0)
     return response
 
-'''
+
 @bp.route("/auth/signup", methods=["POST"])
 async def signup_route():
     return await signup()
-'''
+
 
 @bp.route("/auth/delete/<user_id>", methods=["DELETE"])
 async def delete_user(user_id):
     return await delete_user(user_id)
-
+'''
 @bp.route('/auth/me', methods=['GET'])
 def auth_me():
-    # Cookieを確認してログイン状態をチェック
-    if request.cookies.get('logged_in') == 'true':
-        return jsonify({"logged_in": True}), 200
-    else:
-        return jsonify({"logged_in": False}), 200
+    # get the user id from the request headers
+    authenticated_user = get_authenticated_user_details(
+        request_headers=request.headers)
+    user_id = authenticated_user["user_principal_id"]
 
+@bp.route('/users', methods=['GET'])
+def users():
+    users = fetch_users()
+    return jsonify(users), 200
+
+@bp.route('/user/<uid>', methods=['GET'])
+def get_user(uid):
+    try:
+        user = auth.get_user(uid)
+        return jsonify({
+            'uid': user.uid,
+            'email': user.email,
+            'displayName': user.display_name,
+            'photoURL': user.photo_url,
+            'phoneNumber': user.phone_number,
+            'disabled': user.disabled
+        })
+    except firebase_admin.auth.AuthError as e:
+        return jsonify({'error': str(e)}), 400
 
 async def generate_title(conversation_messages):
     # make sure the messages are sorted by _ts descending

@@ -51,9 +51,9 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
     const isSelected = item?.id === appStateContext?.state.currentChat?.id;
     const dialogContentProps = {
         type: DialogType.close,
-        title: 'Are you sure you want to delete this item?',
-        closeButtonAriaLabel: 'Close',
-        subText: 'The history of this chat session will permanently removed.',
+        title: 'このアイテムを削除してもよろしいですか？',
+        closeButtonAriaLabel: '閉じる',
+        subText: 'このチャットセッションの履歴は永久に削除されます。',
     };
 
     const modalProps = {
@@ -113,7 +113,7 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
             return;
         }
         if(editTitle == item.title){
-            setErrorRename("Error: Enter a new title to proceed.")
+            setErrorRename("エラー: 新しいタイトルを入力してください。")
             setTimeout(() => {
                 setErrorRename(undefined);
                 setTextFieldFocused(true);
@@ -126,7 +126,7 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
         setRenameLoading(true)
         let response = await historyRename(item.id, editTitle);
         if(!response.ok){
-            setErrorRename("Error: could not rename item")
+            setErrorRename("エラー: アイテムの名前を変更できません")
             setTimeout(() => {
                 setTextFieldFocused(true);
                 setErrorRename(undefined);
@@ -165,12 +165,11 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
         <Stack
             key={item.id}
             tabIndex={0}
-            aria-label='chat history item'
+            aria-label='チャット履歴アイテム'
             className={styles.itemCell}
             onClick={() => handleSelectItem()}
             onKeyDown={e => e.key === "Enter" || e.key === " " ? handleSelectItem() : null}
             verticalAlign='center'
-            // horizontal
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             styles={{
@@ -183,7 +182,7 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
                 <Stack.Item 
                     style={{ width: '100%' }}
                 >
-                    <form aria-label='edit title form' onSubmit={(e) => handleSaveEdit(e)} style={{padding: '5px 0px'}}>
+                    <form aria-label='タイトル編集フォーム' onSubmit={(e) => handleSaveEdit(e)} style={{padding: '5px 0px'}}>
                         <Stack horizontal verticalAlign={'start'}>
                             <Stack.Item>
                                 <TextField
@@ -193,14 +192,13 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
                                     placeholder={item.title}
                                     onChange={chatHistoryTitleOnChange}
                                     onKeyDown={handleKeyPressEdit}
-                                    // errorMessage={errorRename}
                                     disabled={errorRename ? true : false}
                                 />
                             </Stack.Item>
                             {editTitle && (<Stack.Item>
-                                <Stack aria-label='action button group' horizontal verticalAlign={'center'}>
-                                    <IconButton role='button' disabled={errorRename !== undefined} onKeyDown={e => e.key === " " || e.key === 'Enter' ? handleSaveEdit(e) : null} onClick={(e) => handleSaveEdit(e)} aria-label='confirm new title' iconProps={{iconName: 'CheckMark'}} styles={{ root: { color: 'green', marginLeft: '5px' } }} />
-                                    <IconButton role='button' disabled={errorRename !== undefined} onKeyDown={e => e.key === " " || e.key === 'Enter' ? cancelEditTitle() : null} onClick={() => cancelEditTitle()} aria-label='cancel edit title' iconProps={{iconName: 'Cancel'}} styles={{ root: { color: 'red', marginLeft: '5px' } }} />
+                                <Stack aria-label='アクションボタングループ' horizontal verticalAlign={'center'}>
+                                    <IconButton role='button' disabled={errorRename !== undefined} onKeyDown={e => e.key === " " || e.key === 'Enter' ? handleSaveEdit(e) : null} onClick={(e) => handleSaveEdit(e)} aria-label='新しいタイトルを確認' iconProps={{iconName: 'CheckMark'}} styles={{ root: { color: 'green', marginLeft: '5px' } }} />
+                                    <IconButton role='button' disabled={errorRename !== undefined} onKeyDown={e => e.key === " " || e.key === 'Enter' ? cancelEditTitle() : null} onClick={() => cancelEditTitle()} aria-label='タイトル編集をキャンセル' iconProps={{iconName: 'Cancel'}} styles={{ root: { color: 'red', marginLeft: '5px' } }} />
                                 </Stack>
                             </Stack.Item>)}
                         </Stack>
@@ -213,8 +211,8 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
                 <Stack horizontal verticalAlign={'center'} style={{ width: '100%' }}>
                     <div className={styles.chatTitle}>{truncatedTitle}</div>
                     {(isSelected || isHovered) && <Stack horizontal horizontalAlign='end'>
-                        <IconButton className={styles.itemButton} iconProps={{ iconName: 'Delete' }} title="Delete" onClick={toggleDeleteDialog} onKeyDown={e => e.key === " " ? toggleDeleteDialog() : null}/>
-                        <IconButton className={styles.itemButton} iconProps={{ iconName: 'Edit' }} title="Edit" onClick={onEdit} onKeyDown={e => e.key === " " ? onEdit() : null}/>
+                        <IconButton className={styles.itemButton} iconProps={{ iconName: 'Delete' }} title="削除" onClick={toggleDeleteDialog} onKeyDown={e => e.key === " " ? toggleDeleteDialog() : null}/>
+                        <IconButton className={styles.itemButton} iconProps={{ iconName: 'Edit' }} title="編集" onClick={onEdit} onKeyDown={e => e.key === " " ? onEdit() : null}/>
                     </Stack>}
                 </Stack>
             </>
@@ -225,7 +223,7 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
                         root: { color: 'red', marginTop: 5, fontSize: 14 }
                     }}
                 >
-                    Error: could not delete item
+                    エラー: アイテムを削除できません
                 </Text>
             )}
             <Dialog
@@ -235,8 +233,8 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
                 modalProps={modalProps}
             >
                 <DialogFooter>
-                <PrimaryButton onClick={onDelete} text="Delete" />
-                <DefaultButton onClick={toggleDeleteDialog} text="Cancel" />
+                <PrimaryButton onClick={onDelete} text="削除" />
+                <DefaultButton onClick={toggleDeleteDialog} text="キャンセル" />
                 </DialogFooter>
             </Dialog>
         </Stack>
@@ -276,8 +274,9 @@ export const ChatHistoryListItemGroups: React.FC<ChatHistoryListItemGroupsProps>
     const handleFetchHistory = async () => {
         const currentChatHistory = appStateContext?.state.chatHistory;
         setShowSpinner(true);
-
-        await historyList(offset).then((response) => {
+        const user = await appStateContext?.state.user;
+        const idToken = await user?.getIdToken();
+        await historyList(offset, idToken).then((response) => {
             const concatenatedChatHistory = currentChatHistory && response && currentChatHistory.concat(...response)
             if (response) {
                 appStateContext?.dispatch({ type: 'FETCH_CHAT_HISTORY', payload: concatenatedChatHistory || response });
@@ -308,9 +307,9 @@ export const ChatHistoryListItemGroups: React.FC<ChatHistoryListItemGroupsProps>
   return (
     <div className={styles.listContainer} data-is-scrollable>
       {groupedChatHistory.map((group) => (
-        group.entries.length > 0 && <Stack horizontalAlign="start" verticalAlign="center" key={group.month} className={styles.chatGroup} aria-label={`chat history group: ${group.month}`}>
+        group.entries.length > 0 && <Stack horizontalAlign="start" verticalAlign="center" key={group.month} className={styles.chatGroup} aria-label={`チャット履歴グループ: ${group.month}`}>
           <Stack aria-label={group.month} className={styles.chatMonth}>{formatMonth(group.month)}</Stack>
-          <List aria-label={`chat history list`} items={group.entries} onRenderCell={onRenderCell} className={styles.chatList}/>
+          <List aria-label={`チャット履歴リスト`} items={group.entries} onRenderCell={onRenderCell} className={styles.chatList}/>
           <div ref={observerTarget} />
           <Separator styles={{
             root: {
@@ -323,7 +322,7 @@ export const ChatHistoryListItemGroups: React.FC<ChatHistoryListItemGroupsProps>
           }}/>
         </Stack>
       ))}
-      {showSpinner && <div className={styles.spinnerContainer}><Spinner size={SpinnerSize.small} aria-label="loading more chat history" className={styles.spinner}/></div>}
+      {showSpinner && <div className={styles.spinnerContainer}><Spinner size={SpinnerSize.small} aria-label="さらにチャット履歴を読み込み中" className={styles.spinner}/></div>}
     </div>
   );
 };

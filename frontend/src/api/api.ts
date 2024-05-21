@@ -51,18 +51,21 @@ export const fetchChatHistoryInit = (): Conversation[] | null => {
     return chatHistorySampleData;
 }
 
-export const historyList = async (offset=0): Promise<Conversation[] | null> => {
+export const historyList = async (offset=0,idToken?:string): Promise<Conversation[] | null> => {
     const response = await fetch(`/history/list?offset=${offset}`, {
         method: "GET",
+        headers: {
+            "Authorization": `Bearer ${idToken}`
+        }
     }).then(async (res) => {
         const payload = await res.json();
         if (!Array.isArray(payload)) {
-            console.error("There was an issue fetching your data.");
+            console.error("Payload is not an array.");
             return null;
         }
         const conversations: Conversation[] = await Promise.all(payload.map(async (conv: any) => {
             let convMessages: ChatMessage[] = [];
-            convMessages = await historyRead(conv.id)
+            convMessages = await historyRead(conv.id,idToken)
             .then((res) => {
                 return res
             })
@@ -80,20 +83,21 @@ export const historyList = async (offset=0): Promise<Conversation[] | null> => {
         }));
         return conversations;
     }).catch((err) => {
-        console.error("There was an issue fetching your data.");
+        console.error("historyList: There was an issue fetching your data.");
         return null
     })
 
     return response
 }
 
-export const historyRead = async (convId: string): Promise<ChatMessage[]> => {
+export const historyRead = async (convId: string,idToken?:string): Promise<ChatMessage[]> => {
     const response = await fetch("/history/read", {
         method: "POST",
         body: JSON.stringify({
             conversation_id: convId
         }),
         headers: {
+            "Authorization": `Bearer ${idToken}`,
             "Content-Type": "application/json"
         },
     })
@@ -123,7 +127,7 @@ export const historyRead = async (convId: string): Promise<ChatMessage[]> => {
     return response
 }
 
-export const historyGenerate = async (options: ConversationRequest, abortSignal: AbortSignal, convId?: string): Promise<Response> => {
+export const historyGenerate = async (options: ConversationRequest, abortSignal: AbortSignal, idToken?:string, convId?: string): Promise<Response> => {
     let body;
     if(convId){
         body = JSON.stringify({
@@ -138,6 +142,7 @@ export const historyGenerate = async (options: ConversationRequest, abortSignal:
     const response = await fetch("/history/generate", {
         method: "POST",
         headers: {
+            "Authorization": `Bearer ${idToken}`,
             "Content-Type": "application/json"
         },
         body: body,
@@ -152,7 +157,7 @@ export const historyGenerate = async (options: ConversationRequest, abortSignal:
     return response
 }
 
-export const historyUpdate = async (messages: ChatMessage[], convId: string): Promise<Response> => {
+export const historyUpdate = async (messages: ChatMessage[], convId: string,idToken?:string): Promise<Response> => {
     const response = await fetch("/history/update", {
         method: "POST",
         body: JSON.stringify({
@@ -160,6 +165,7 @@ export const historyUpdate = async (messages: ChatMessage[], convId: string): Pr
             messages: messages
         }),
         headers: {
+            "Authorization": `Bearer ${idToken}`,
             "Content-Type": "application/json"
         },
     }).then(async (res) => {
@@ -177,13 +183,14 @@ export const historyUpdate = async (messages: ChatMessage[], convId: string): Pr
     return response
 }
 
-export const historyDelete = async (convId: string) : Promise<Response> => {
+export const historyDelete = async (convId: string,idToken?:string) : Promise<Response> => {
     const response = await fetch("/history/delete", {
         method: "DELETE",
         body: JSON.stringify({
             conversation_id: convId,
         }),
         headers: {
+            "Authorization": `Bearer ${idToken}`,
             "Content-Type": "application/json"
         },
     })
@@ -202,11 +209,12 @@ export const historyDelete = async (convId: string) : Promise<Response> => {
     return response;
 }
 
-export const historyDeleteAll = async () : Promise<Response> => {
+export const historyDeleteAll = async (idToken:string) : Promise<Response> => {
     const response = await fetch("/history/delete_all", {
         method: "DELETE",
         body: JSON.stringify({}),
         headers: {
+            "Authorization": `Bearer ${idToken}`,
             "Content-Type": "application/json"
         },
     })
@@ -225,13 +233,14 @@ export const historyDeleteAll = async () : Promise<Response> => {
     return response;
 }
 
-export const historyClear = async (convId: string) : Promise<Response> => {
+export const historyClear = async (convId: string,idToken?:string) : Promise<Response> => {
     const response = await fetch("/history/clear", {
         method: "POST",
         body: JSON.stringify({
             conversation_id: convId,
         }),
         headers: {
+            "Authorization": `Bearer ${idToken}`,
             "Content-Type": "application/json"
         },
     })
@@ -250,7 +259,7 @@ export const historyClear = async (convId: string) : Promise<Response> => {
     return response;
 }
 
-export const historyRename = async (convId: string, title: string) : Promise<Response> => {
+export const historyRename = async (convId: string, title: string,idToken?:string) : Promise<Response> => {
     const response = await fetch("/history/rename", {
         method: "POST",
         body: JSON.stringify({
@@ -258,6 +267,7 @@ export const historyRename = async (convId: string, title: string) : Promise<Res
             title: title
         }),
         headers: {
+            "Authorization": `Bearer ${idToken}`,
             "Content-Type": "application/json"
         },
     })
