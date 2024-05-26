@@ -262,7 +262,7 @@ export const historyClear = async (convId: string,idToken?:string) : Promise<Res
 export const historyRename = async (convId: string, title: string,idToken?:string) : Promise<Response> => {
     const response = await fetch("/history/rename", {
         method: "POST",
-        body: JSON.stringify({
+        body: JSON.stringify({ 
             conversation_id: convId,
             title: title
         }),

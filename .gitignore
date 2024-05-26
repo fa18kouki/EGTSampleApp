@@ -6,4 +6,5 @@ frontend/node_modules
 __pycache__/
 .ipynb_checkpoints/
 .FirebaseConfig
-backend/auth/egt-gpt-firebase-adminsdk-w0ifw-89672149e0.json
+backend/auth/
+./egt-gpt-firebase-adminsdk-w0ifw-89672149e0.json

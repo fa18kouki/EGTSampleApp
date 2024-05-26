@@ -6,6 +6,7 @@ import {
 } from "firebase/auth";
 import { auth } from "../../../FirebaseConfig";
 import { Navigate, Link } from "react-router-dom";
+import styles from "./Login.module.css"; // CSSファイルをインポート
 
 const Login: React.FC = () => {
   const [loginEmail, setLoginEmail] = useState<string>("");
@@ -33,31 +34,35 @@ const Login: React.FC = () => {
       {user ? (
         <Navigate to={`/`} />
       ) : (
-        <>
-          <h1>ログインページ</h1>
-          <form onSubmit={handleSubmit}>
-            <div>
-              <label>メールアドレス</label>
-              <input
-                name="email"
-                type="email"
-                value={loginEmail}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => setLoginEmail(e.target.value)}
-              />
-            </div>
-            <div>
-              <label>パスワード</label>
-              <input
-                name="password"
-                type="password"
-                value={loginPassword}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => setLoginPassword(e.target.value)}
-              />
-            </div>
-            <button>ログイン</button>
-            <p>新規登録は<Link to={`/signup/`}>こちら</Link></p>
-          </form>
-        </>
+        <div className={styles.container}>
+          <div className={styles.formWrapper}>
+            <h1 className={styles.title}>ログインページ</h1>
+            <form onSubmit={handleSubmit}>
+              <div className={styles.inputGroup}>
+                <label className={styles.label}>メールアドレス</label>
+                <input
+                  name="email"
+                  type="email"
+                  value={loginEmail}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => setLoginEmail(e.target.value)}
+                  className={styles.input}
+                />
+              </div>
+              <div className={styles.inputGroup}>
+                <label className={styles.label}>パスワード</label>
+                <input
+                  name="password"
+                  type="password"
+                  value={loginPassword}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => setLoginPassword(e.target.value)}
+                  className={styles.input}
+                />
+              </div>
+              <button className={styles.button}>ログイン</button>
+              <p className={styles.signupText}>新規登録は<Link to={`/signup/`} className={styles.link}>こちら</Link></p>
+            </form>
+          </div>
+        </div>
       )}
     </>
   );

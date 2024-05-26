@@ -19,7 +19,15 @@ import {
   ShieldLockRegular,
   ErrorCircleRegular,
 } from "@fluentui/react-icons";
-import { Dropdown, IDropdownOption } from "@fluentui/react/lib/Dropdown";
+import {
+  Dropdown,
+  makeStyles,
+  Option,
+  useId,
+  Persona,
+  Button,
+} from "@fluentui/react-components";
+import type { DropdownProps } from "@fluentui/react-components";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
@@ -58,6 +66,10 @@ import fv_text3_black from "../../assets/fv_text3_black.png";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import { auth } from "../../../FirebaseConfig";
 import { useNavigate, Navigate } from "react-router-dom";
+import {
+  ArrowExportLtrFilled,
+  ArrowExportRtlFilled,
+} from "@fluentui/react-icons";
 
 const enum messageStatus {
   NotRunning = "Not Running",
@@ -81,10 +93,8 @@ const AuthChat = () => {
   const [processMessages, setProcessMessages] = useState<messageStatus>(
     messageStatus.NotRunning
   );
-  const [hideHistoryLabel, setHideHistoryLabel] =
-    useState<string>("Hide chat history");
-  const [showHistoryLabel, setShowHistoryLabel] =
-    useState<string>("Show chat history");
+  const [hideHistoryLabel, setHideHistoryLabel] = useState<string>("Close");
+  const [showHistoryLabel, setShowHistoryLabel] = useState<string>("Open");
   const [clearingChat, setClearingChat] = useState<boolean>(false);
   const [hideErrorDialog, { toggle: toggleErrorDialog }] = useBoolean(true);
   const [errorMsg, setErrorMsg] = useState<ErrorMessage | null>();
@@ -96,7 +106,7 @@ const AuthChat = () => {
     closeButtonAriaLabel: "Close",
     subText: errorMsg?.subtitle,
   };
-
+  /*
   const onGptModelChange = (
     _ev?: React.FormEvent<HTMLDivElement>,
     option?: IDropdownOption
@@ -105,26 +115,38 @@ const AuthChat = () => {
       setGptModel(option.key as string);
     }
   };
+  */
   const modalProps = {
     titleAriaId: "labelId",
     subtitleAriaId: "subTextId",
     isBlocking: true,
     styles: { main: { maxWidth: 450 } },
   };
-
+  const options = [
+    "Cat",
+    "Caterpillar",
+    "Corgi",
+    "Chupacabra",
+    "Dog",
+    "Ferret",
+    "Fish",
+    "Fox",
+    "Hamster",
+    "Snake",
+  ];
   const [ASSISTANT, TOOL, ERROR] = ["assistant", "tool", "error"];
   const NO_CONTENT_ERROR = "No content in messages object.";
 
   const handleHistoryClick = () => {
     appStateContext?.dispatch({ type: "TOGGLE_CHAT_HISTORY" });
   };
-
+  /*
   const gpt_models: IDropdownOption[] = [
     { key: "gpt-3.5-turbo-16k", text: "GPT-3.5-TURBO16K" },
     { key: "gpt-4", text: "GPT-4" },
     { key: "gpt-4-32k", text: "GPT-4-32K" },
   ];
-
+  */
   useEffect(() => {
     if (
       appStateContext?.state.isCosmosDBAvailable?.status !==
@@ -822,46 +844,47 @@ const AuthChat = () => {
             <Navigate to={`/login/`} />
           ) : (
             <div className={styles.container} role="main">
+              
               <Stack horizontal className={styles.chatRoot}>
+              {appStateContext?.state.isChatHistoryOpen &&
+                  appStateContext?.state.isCosmosDBAvailable?.status !==
+                    CosmosDBStatus.NotConfigured && <ChatHistoryPanel />}
                 <div className={styles.chatContainer}>
                   <div className={styles.commandsContainer}>
                     <Stack horizontal>
                       {appStateContext?.state.isCosmosDBAvailable?.status !==
                         CosmosDBStatus.NotConfigured && (
-                        <HistoryButton
-                          onClick={handleHistoryClick}
-                          text={
-                            appStateContext?.state?.isChatHistoryOpen
-                              ? hideHistoryLabel
-                              : showHistoryLabel
-                          }
-                        />
+                        <>
+                        <Dropdown
+                            placeholder="Select an animal"
+                            appearance="underline"
+                          >
+                            {options.map((option) => (
+                              <Option
+                                key={option}
+                                disabled={option === "Ferret"}
+                              >
+                                {option}
+                              </Option>
+                            ))}
+                          </Dropdown>
+                          {appStateContext?.state.isChatHistoryOpen ? (
+                            <Button>
+                              <ArrowExportLtrFilled
+                                className={styles.historyArrow}
+                                onClick={handleHistoryClick}
+                              />
+                            </Button>
+                          ) : (
+                            <ArrowExportRtlFilled
+                              className={styles.historyArrow}
+                              onClick={handleHistoryClick}
+                            />
+                          )}
+                          
+                        </>
                       )}
                     </Stack>
-                    <select
-                      className={styles.dropdownCustom}
-                      value={gptModel}
-                      onChange={(e) =>
-                        onGptModelChange(undefined, {
-                          key: e.target.value,
-                          text: e.target.options[e.target.selectedIndex].text,
-                        })
-                      }
-                      style={{
-                        fontSize: "16px",
-                        fontFamily: "Arial, sans-serif",
-                        position: "absolute",
-                        top: "10px",
-                        right: "10px",
-                        transform: "translate(0, -100%)",
-                      }}
-                    >
-                      {gpt_models.map((model) => (
-                        <option key={model.key} value={model.key}>
-                          {model.text}
-                        </option>
-                      ))}
-                    </select>
                   </div>
                   {!messages || messages.length < 1 ? (
                     <Stack className={styles.chatEmptyState}>

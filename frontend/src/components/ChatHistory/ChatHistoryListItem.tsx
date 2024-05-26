@@ -49,6 +49,7 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
     
     const appStateContext = React.useContext(AppStateContext)
     const isSelected = item?.id === appStateContext?.state.currentChat?.id;
+    const user = appStateContext?.state.user;
     const dialogContentProps = {
         type: DialogType.close,
         title: 'このアイテムを削除してもよろしいですか？',
@@ -124,7 +125,8 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
             return
         }
         setRenameLoading(true)
-        let response = await historyRename(item.id, editTitle);
+        const idToken = await user?.getIdToken();
+        let response = await historyRename(item.id, editTitle,idToken);
         if(!response.ok){
             setErrorRename("エラー: アイテムの名前を変更できません")
             setTimeout(() => {
@@ -174,7 +176,7 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
             onMouseLeave={() => setIsHovered(false)}
             styles={{
                 root: {
-                    backgroundColor: isSelected ? '#e6e6e6' : 'transparent',
+                    backgroundColor: isSelected ? '#d1d1d1' : 'transparent',
                 }
             }}
         >
