@@ -38,7 +38,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="/Users/kannokouki/マイドライブ/社内環境GPT/sample-app 04/venv"
+VIRTUAL_ENV="/Users/kannokouki/マイドライブ/EGTGPT/venv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"

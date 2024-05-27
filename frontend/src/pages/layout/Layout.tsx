@@ -1,13 +1,15 @@
-import { Outlet, Link, NavLink } from "react-router-dom";
+import { Outlet, Link, NavLink, useNavigate, Navigate } from "react-router-dom";
 import styles from "./Layout.module.css";
 import Contoso from "../../assets/Contoso.svg";
 import { CopyRegular } from "@fluentui/react-icons";
 import { Dialog, Stack, TextField } from "@fluentui/react";
-import { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
+import { auth } from "../../../FirebaseConfig";
 import { HistoryButton, ShareButton } from "../../components/common/Button";
 import { AppStateContext } from "../../state/AppProvider";
-import { CosmosDBStatus, Logout, GetUserInfo} from "../../api";
-import  EGTLogo from "../../assets/EGTLogo.svg";
+import { CosmosDBStatus, Logout, GetUserInfo } from "../../api";
+import EGTLogo from "../../assets/EGTLogo.svg";
+import { onAuthStateChanged, signOut, User } from "firebase/auth";
 
 const Layout = () => {
   const [isSharePanelOpen, setIsSharePanelOpen] = useState<boolean>(false);
@@ -24,7 +26,7 @@ const Layout = () => {
 
   const handleShareClick = () => {
     setIsSharePanelOpen(true);
-  };  
+  };
 
   const checkAuthentication = async () => {
     const isAuthenticated = await GetUserInfo();
@@ -48,6 +50,23 @@ const Layout = () => {
 
   const handleHistoryClick = () => {
     appStateContext?.dispatch({ type: "TOGGLE_CHAT_HISTORY" });
+  };
+
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setLoading(false);
+    });
+  }, []);
+
+  const navigate = useNavigate();
+
+  const logout = async () => {
+    await signOut(auth);
+    navigate("/login/");
   };
 
   useEffect(() => {
@@ -82,7 +101,7 @@ const Layout = () => {
     window.addEventListener("resize", handleResize);
     handleResize();
 
-    return () => window.removeEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize); 
   }, []);
 
   return (
@@ -90,9 +109,9 @@ const Layout = () => {
       <header className={styles.header} role={"banner"}>
         <div className={styles.headerContainer}>
           <div className={styles.headerContainer}>
-            <Link to="/" className={styles.headerTitleContainer}>
+            <Link to="/" className={styles.headerTitleLeft}>
               <img src={EGTLogo} className={styles.headerLogo} alt="EGT Logo" />
-             {/*  <h3 className={styles.headerTitle}>EGT-GPT</h3> */}
+              {/*  <h3 className={styles.headerTitle}>EGT-GPT</h3> */}
             </Link>
             <nav>
               <ul className={styles.headerNavList}>
@@ -108,7 +127,7 @@ const Layout = () => {
                     認証不要Chat
                   </NavLink>
                 </li>
-
+                {/*
                 <li className={styles.headerNavLeftMargin}>
                   <NavLink
                     to="/prompts"
@@ -119,6 +138,19 @@ const Layout = () => {
                     }
                   >
                     プロンプト集
+                  </NavLink>
+                </li>
+                */}
+                <li className={styles.headerNavLeftMargin}>
+                  <NavLink
+                    to="/mypage"
+                    className={({ isActive }) =>
+                      isActive
+                        ? styles.headerNavPageLinkActive
+                        : styles.headerNavPageLink
+                    }
+                  >
+                    {user?.email}
                   </NavLink>
                 </li>
               </ul>

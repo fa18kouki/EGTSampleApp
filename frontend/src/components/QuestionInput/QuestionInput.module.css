@@ -29,15 +29,21 @@
     width: 24px;
     height: 23px;
 }
-
+/*
 .questionInputSendButtonDisabled {
-    /* opacity: 0.4; */
     width: 24px;
     height: 23px;
     background: none;
     color: #424242;
 }
 
+.questionInputSendButtonDisabled {
+    width: 24px;
+    height: 23px;
+    background: none;
+    color: #424242;
+}
+*/
 .questionInputBottomBorder {
     position: absolute;
     width: 100%;

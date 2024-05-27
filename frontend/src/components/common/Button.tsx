@@ -19,12 +19,11 @@ export const ShareButton: React.FC<ButtonProps> = ({ onClick, text }) => {
   )
 }
 
-export const HistoryButton: React.FC<ButtonProps> = ({ onClick, text }) => {
+export const HistoryButton: React.FC<ButtonProps> = ({ onClick, iconProps }) => {
   return (
     <DefaultButton
       className={styles.historyButtonRoot}
-      text={text}
-      iconProps={{ iconName: 'History' }}
+      iconProps={iconProps}
       onClick={onClick}
     />
   )

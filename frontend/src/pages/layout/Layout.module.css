@@ -19,7 +19,7 @@
     margin-left: 12px;
 }
 
-.headerTitleContainer {
+.headerTitleContainer { 
     display: flex;
     align-items: center;
     margin-right: 40px;
