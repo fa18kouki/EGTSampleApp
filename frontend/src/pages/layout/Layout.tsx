@@ -115,7 +115,7 @@ const Layout = () => {
               arai-label="Open Navigation"
               onClick={handleHistoryClick}
             >
-              <NavigationFilled/>
+              
             </div>
             <Link to="/" className={styles.headerTitleLeft}>
               <img src={EGTLogo} className={styles.headerLogo} alt="EGT Logo" />

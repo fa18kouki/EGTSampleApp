@@ -18,6 +18,8 @@ import {
   SquareRegular,
   ShieldLockRegular,
   ErrorCircleRegular,
+  PanelLeftTextRegular,
+  PanelLeftRegular
 } from "@fluentui/react-icons";
 import {
   //Dropdown,
@@ -93,8 +95,6 @@ const AuthChat = () => {
   const [processMessages, setProcessMessages] = useState<messageStatus>(
     messageStatus.NotRunning
   );
-  const [hideHistoryLabel, setHideHistoryLabel] = useState<string>("Close");
-  const [showHistoryLabel, setShowHistoryLabel] = useState<string>("Open");
   const [clearingChat, setClearingChat] = useState<boolean>(false);
   const [hideErrorDialog, { toggle: toggleErrorDialog }] = useBoolean(true);
   const [errorMsg, setErrorMsg] = useState<ErrorMessage | null>();
@@ -109,9 +109,10 @@ const AuthChat = () => {
   interface Item {
     name: string;
     description: string;
+    key: string;
   }
   const onItemSelect = (item:Item) => {
-    console.log(item);
+    setGptModel(item.key as string);
   };
   /*
   const onGptModelChange = (
@@ -129,31 +130,12 @@ const AuthChat = () => {
     isBlocking: true,
     styles: { main: { maxWidth: 450 } },
   };
-  const options = [
-    "Cat",
-    "Caterpillar",
-    "Corgi",
-    "Chupacabra",
-    "Dog",
-    "Ferret",
-    "Fish",
-    "Fox",
-    "Hamster",
-    "Snake",
-  ];
   const [ASSISTANT, TOOL, ERROR] = ["assistant", "tool", "error"];
   const NO_CONTENT_ERROR = "No content in messages object.";
 
   const handleHistoryClick = () => {
     appStateContext?.dispatch({ type: "TOGGLE_CHAT_HISTORY" });
   };
-  /*
-  const gpt_models: IDropdownOption[] = [
-    { key: "gpt-3.5-turbo-16k", text: "GPT-3.5-TURBO16K" },
-    { key: "gpt-4", text: "GPT-4" },
-    { key: "gpt-4-32k", text: "GPT-4-32K" },
-  ];
-  */
 
   useEffect(() => {
     if (
@@ -615,6 +597,7 @@ const AuthChat = () => {
     } catch (e) {
       if (!abortController.signal.aborted) {
         let errorMessage = `An error occurred. ${errorResponseMessage}`;
+        console.error(e);
         if (result.error?.message) {
           errorMessage = result.error.message;
         } else if (typeof result.error === "string") {
@@ -865,28 +848,32 @@ const AuthChat = () => {
                   )}
                 <div className={styles.chatContainer}>
                   <div className={styles.commandsContainer}>
-                    <Stack horizontal>
+                  <Stack horizontal horizontalAlign="space-between">
+                      <Stack horizontal>
+                        {appStateContext?.state.isCosmosDBAvailable?.status !==
+                          CosmosDBStatus.NotConfigured && (
+                          <>
+                            {appStateContext?.state.isChatHistoryOpen ? (
+                              <Button>
+                                <PanelLeftRegular
+                                  className={styles.historyArrow}
+                                  onClick={handleHistoryClick}
+                                />
+                              </Button>
+                            ) : (
+                              <Button>
+                                <PanelLeftTextRegular
+                                  className={styles.historyArrow}
+                                  onClick={handleHistoryClick}
+                                />
+                              </Button>
+                            )}
+                          </>
+                        )}
+                      </Stack>
                       <Dropdown
                         onItemSelect={onItemSelect}
                       />
-                      {appStateContext?.state.isCosmosDBAvailable?.status !==
-                        CosmosDBStatus.NotConfigured && (
-                        <>
-                          {appStateContext?.state.isChatHistoryOpen ? (
-                            <Button>
-                              <ArrowExportLtrFilled
-                                className={styles.historyArrow}
-                                onClick={handleHistoryClick}
-                              />
-                            </Button>
-                          ) : (
-                            <ArrowExportRtlFilled
-                              className={styles.historyArrow}
-                              onClick={handleHistoryClick}
-                            />
-                          )}
-                        </>
-                      )}
                     </Stack>
                   </div>
                   {!messages || messages.length < 1 ? (

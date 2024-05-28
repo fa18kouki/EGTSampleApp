@@ -7,6 +7,8 @@ body {
     height: 100%;
     margin: 0;
     padding: 0;
+    min-width: 1000px; /* 最小幅を320pxに設定 */
+    min-height: 500px; /* 最小高さを480pxに設定 */
 }
 
 html {
