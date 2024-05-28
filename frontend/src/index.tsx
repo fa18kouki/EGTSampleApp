@@ -8,7 +8,6 @@ import Prompts from "./pages/prompts/Prompts";
 import Layout from "./pages/layout/Layout";
 import NoPage from "./pages/NoPage";
 import Mypage from "./pages/mypage/Mypage";
-import UnauthChat from "./pages/unauth_chat/UnauthChat";
 import AuthChat from "./pages/auth_chat/AuthChat";
 import Login from  "./pages/login/Login";
 import SignUp from "./pages/signup/Signup";
@@ -24,7 +23,6 @@ export default function App() {
                     <Route path="/" element={<Layout />}>
                         <Route index element={<AuthChat />} />
                         <Route path="login" element={<Login />} />
-                        <Route path="chat" element={<UnauthChat />} />
                         <Route path="signup" element={<SignUp/>} />
                         <Route path="prompts" element={<Prompts />} />
                         <Route path="mypage" element={<Mypage />} />

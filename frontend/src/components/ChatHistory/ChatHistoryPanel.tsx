@@ -22,11 +22,21 @@ import { useContext } from "react";
 import { AppStateContext } from "../../state/AppProvider";
 import React from "react";
 import ChatHistoryList from "./ChatHistoryList";
-import { ChatHistoryLoadingState, historyDeleteAll } from "../../api";
+import {
+  ChatHistoryLoadingState,
+  historyDeleteAll,
+  ChatMessage,
+  Citation,
+} from "../../api";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import { auth } from "../../../FirebaseConfig.js";
 
-interface ChatHistoryPanelProps {}
+interface ChatHistoryPanelProps {
+  newChat: () => void;
+  setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
+  setIsCitationPanelOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setActiveCitation: React.Dispatch<React.SetStateAction<Citation | undefined>>;
+}
 
 export enum ChatHistoryPanelTabs {
   History = "履歴",
@@ -77,6 +87,11 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
       text: "全てのチャット履歴を削除",
       iconProps: { iconName: "Delete" },
     },
+    {
+      key: "addChat",
+      text: "新しくチャットを始める",
+      iconProps: { iconName: "Add" },
+    },
   ];
 
   const handleHistoryClick = () => {
@@ -115,6 +130,24 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
     setTimeout(() => {
       setClearingError(false);
     }, 2000);
+  };
+
+  const handleMenuItemClick = (
+    ev?: React.MouseEvent<HTMLElement> | React.KeyboardEvent<HTMLElement>,
+    item?: IContextualMenuItem
+  ) => {
+    if (!item) return;
+    switch (item.key) {
+      case "clearAll":
+        toggleClearAllDialog();
+        break;
+      case "addChat":
+        props.newChat();
+        break;
+      default:
+        break;
+    }
+    onHideContextualMenu();
   };
 
   React.useEffect(() => {}, [
@@ -171,9 +204,9 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
           <Stack horizontal styles={commandBarButtonStyle}>
             <CommandBarButton
               iconProps={{ iconName: "More" }}
-              title={"全てのチャット履歴を削除"}
+              title={"メニューを表示"}
               onClick={onShowContextualMenu}
-              aria-label={"全てのチャット履歴を削除"}
+              aria-label={"メニューを表示"}
               styles={commandBarStyle}
               role="button"
               id="moreButton"
@@ -182,7 +215,7 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
               items={menuItems}
               hidden={!showContextualMenu}
               target={"#moreButton"}
-              onItemClick={toggleClearAllDialog}
+              onItemClick={handleMenuItemClick}
               onDismiss={onHideContextualMenu}
             />
             <CommandBarButton

@@ -10,6 +10,7 @@ import { AppStateContext } from "../../state/AppProvider";
 import { CosmosDBStatus, Logout, GetUserInfo } from "../../api";
 import EGTLogo from "../../assets/EGTLogo.svg";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
+import { NavigationFilled } from '@fluentui/react-icons';
 
 const Layout = () => {
   const [isSharePanelOpen, setIsSharePanelOpen] = useState<boolean>(false);
@@ -109,6 +110,13 @@ const Layout = () => {
       <header className={styles.header} role={"banner"}>
         <div className={styles.headerContainer}>
           <div className={styles.headerContainer}>
+            <div className={styles.headerRight}
+              role="button"
+              arai-label="Open Navigation"
+              onClick={handleHistoryClick}
+            >
+              <NavigationFilled/>
+            </div>
             <Link to="/" className={styles.headerTitleLeft}>
               <img src={EGTLogo} className={styles.headerLogo} alt="EGT Logo" />
               {/*  <h3 className={styles.headerTitle}>EGT-GPT</h3> */}
@@ -124,10 +132,9 @@ const Layout = () => {
                         : styles.headerNavPageLink
                     }
                   >
-                    認証不要Chat
+                    チャット
                   </NavLink>
                 </li>
-                {/*
                 <li className={styles.headerNavLeftMargin}>
                   <NavLink
                     to="/prompts"
@@ -137,10 +144,9 @@ const Layout = () => {
                         : styles.headerNavPageLink
                     }
                   >
-                    プロンプト集
+                    プロンプト
                   </NavLink>
                 </li>
-                */}
                 <li className={styles.headerNavLeftMargin}>
                   <NavLink
                     to="/mypage"

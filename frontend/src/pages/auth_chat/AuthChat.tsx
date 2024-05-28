@@ -20,14 +20,13 @@ import {
   ErrorCircleRegular,
 } from "@fluentui/react-icons";
 import {
-  Dropdown,
+  //Dropdown,
   makeStyles,
   Option,
   useId,
   Persona,
   Button,
 } from "@fluentui/react-components";
-import type { DropdownProps } from "@fluentui/react-components";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
@@ -57,6 +56,7 @@ import {
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { ChatHistoryPanel } from "../../components/ChatHistory/ChatHistoryPanel";
+import { Dropdown } from "../../components/Dropdown";
 import { AppStateContext } from "../../state/AppProvider";
 import { useBoolean } from "@fluentui/react-hooks";
 import { SettingsButton } from "../../components/SettingsButton";
@@ -106,6 +106,13 @@ const AuthChat = () => {
     closeButtonAriaLabel: "Close",
     subText: errorMsg?.subtitle,
   };
+  interface Item {
+    name: string;
+    description: string;
+  }
+  const onItemSelect = (item:Item) => {
+    console.log(item);
+  };
   /*
   const onGptModelChange = (
     _ev?: React.FormEvent<HTMLDivElement>,
@@ -147,6 +154,7 @@ const AuthChat = () => {
     { key: "gpt-4-32k", text: "GPT-4-32K" },
   ];
   */
+
   useEffect(() => {
     if (
       appStateContext?.state.isCosmosDBAvailable?.status !==
@@ -403,7 +411,7 @@ const AuthChat = () => {
 
     return abortController.abort();
   };
-
+  
   const makeApiRequestWithCosmosDB = async (
     question: string,
     conversationId?: string
@@ -466,12 +474,12 @@ const AuthChat = () => {
         const responseJson = await response.json();
         var errorResponseMessage =
           responseJson.error === undefined
-            ? "Please try again. If the problem persists, please contact the site administrator."
+            ? "もう一度お試しください。問題が解決しない場合は、サイト管理者に連絡してください。"
             : responseJson.error;
         let errorChatMsg: ChatMessage = {
           id: uuid(),
           role: ERROR,
-          content: `There was an error generating a response. Chat history can't be saved at this time. ${errorResponseMessage}`,
+          content: `応答の生成中にエラーが発生しました。チャット履歴を保存できません。${errorResponseMessage}`,
           date: new Date().toISOString(),
         };
         let resultConversation;
@@ -768,7 +776,7 @@ const AuthChat = () => {
           .then((res) => {
             if (!res.ok) {
               let errorMessage =
-                "An error occurred. Answers can't be saved at this time. If the problem persists, please contact the site administrator.";
+                "エラーが発生しました。回答を保存できませんでした。問題が解決しない場合は、サイト管理者に連絡してください。";
               let errorChatMsg: ChatMessage = {
                 id: uuid(),
                 role: ERROR,
@@ -844,30 +852,26 @@ const AuthChat = () => {
             <Navigate to={`/login/`} />
           ) : (
             <div className={styles.container} role="main">
-              
               <Stack horizontal className={styles.chatRoot}>
-              {appStateContext?.state.isChatHistoryOpen &&
+                {appStateContext?.state.isChatHistoryOpen &&
                   appStateContext?.state.isCosmosDBAvailable?.status !==
-                    CosmosDBStatus.NotConfigured && <ChatHistoryPanel />}
+                    CosmosDBStatus.NotConfigured && (
+                      <ChatHistoryPanel
+                      newChat={newChat}
+                      setMessages={setMessages}
+                      setIsCitationPanelOpen={setIsCitationPanelOpen}
+                      setActiveCitation={setActiveCitation}
+                    />
+                  )}
                 <div className={styles.chatContainer}>
                   <div className={styles.commandsContainer}>
                     <Stack horizontal>
+                      <Dropdown
+                        onItemSelect={onItemSelect}
+                      />
                       {appStateContext?.state.isCosmosDBAvailable?.status !==
                         CosmosDBStatus.NotConfigured && (
                         <>
-                        <Dropdown
-                            placeholder="Select an animal"
-                            appearance="underline"
-                          >
-                            {options.map((option) => (
-                              <Option
-                                key={option}
-                                disabled={option === "Ferret"}
-                              >
-                                {option}
-                              </Option>
-                            ))}
-                          </Dropdown>
                           {appStateContext?.state.isChatHistoryOpen ? (
                             <Button>
                               <ArrowExportLtrFilled
@@ -881,7 +885,6 @@ const AuthChat = () => {
                               onClick={handleHistoryClick}
                             />
                           )}
-                          
                         </>
                       )}
                     </Stack>
@@ -998,7 +1001,9 @@ const AuthChat = () => {
                         </span>
                       </Stack>
                     )}
+                    {/*}
                     <Stack>
+                      
                       {appStateContext?.state.isCosmosDBAvailable?.status !==
                         CosmosDBStatus.NotConfigured && (
                         <CommandBarButton
@@ -1066,6 +1071,7 @@ const AuthChat = () => {
                         modalProps={modalProps}
                       ></Dialog>
                     </Stack>
+                      */}
                     <QuestionInput
                       clearOnSend
                       placeholder="AIにメッセージを送信する"
@@ -1143,34 +1149,12 @@ const AuthChat = () => {
                       </div>
                     </Stack.Item>
                   )}
+                {/*
                 {appStateContext?.state.isChatHistoryOpen &&
                   appStateContext?.state.isCosmosDBAvailable?.status !==
                     CosmosDBStatus.NotConfigured && <ChatHistoryPanel />}
+                */}
               </Stack>
-              {/*}
-      <Panel
-        headerText="チャット設定"
-        isOpen={false}
-        isBlocking={false}
-        onDismiss={() => setIsConfigPanelOpen(false)}
-        closeButtonAriaLabel="Close"
-        onRenderFooterContent={() => (
-          <DefaultButton onClick={() => setIsConfigPanelOpen(false)}>
-            Close
-          </DefaultButton>
-        )}
-        isFooterAtBottom={true}
-      >
-        <Dropdown
-          className={styles.chatSettingsSeparator}
-          defaultSelectedKey={[gptModel]}
-          selectedKey={gptModel}
-          label="GPT Model:"
-          options={gpt_models}
-          onChange={onGptModelChange}
-        />
-      </Panel>
-      */}
             </div>
           )}
         </>

@@ -56,9 +56,9 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
                 className={styles.questionInputTextArea}
                 placeholder={placeholder}
                 multiline
-                resizable={true}
+                resizable={false}
                 borderless
-                autoAdjustHeight
+                //autoAdjustHeight
                 value={question}
                 onChange={onQuestionChange}
                 onKeyDown={onEnterPress}
