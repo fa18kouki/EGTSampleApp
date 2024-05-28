@@ -24,12 +24,12 @@ export const Dropdown: React.FC<DropdownProps> = ({ onItemSelect }) => {
       items: [
         {
           name: "GPT-3.5",
-          description: "OpenAIによって開発された高度な言語モデル。",
+          description: "OpenAIによって開発された高度な言語モデル",
           key: "gpt-3.5",
         },
         {
           name: "GPT-4",
-          description: "GPTシリーズの最新かつ最強のモデル。",
+          description: "GPTシリーズの最新かつ最強のモデル",
             key: "gpt-4",
         },
       ],
@@ -39,12 +39,12 @@ export const Dropdown: React.FC<DropdownProps> = ({ onItemSelect }) => {
       items: [
         {
           name: "Azure GPT-3.5",
-          description: "Azureクラウドサービスと統合されたGPT-3.5。",
+          description: "Azureクラウドサービスと統合されたGPT-3.5",
           key: "az-gpt-3.5",
         },
         {
           name: "Azure GPT-4",
-          description: "Azureクラウドサービスと統合されたGPT-4。",
+          description: "Azureクラウドサービスと統合されたGPT-4",
             key: "az-gpt-4",
         },
       ],
@@ -66,8 +66,8 @@ export const Dropdown: React.FC<DropdownProps> = ({ onItemSelect }) => {
   return (
     <div className={styles.dropdownContainer}>
       <div className={styles.dropdownHeader} onClick={handleDropdownToggle}>
-        {selectedItem !== null ? selectedItem : "GPT-3.5"}
         <NavigationFilled  className={styles.dropdownIcon} />
+        {selectedItem !== null ? selectedItem : "GPT-4o"}
       </div>
       {isOpen && (
         <div className={styles.dropdownList}> 
@@ -75,13 +75,17 @@ export const Dropdown: React.FC<DropdownProps> = ({ onItemSelect }) => {
             <div key={index} className={styles.dropdownGroup}>
               <div className={styles.dropdownGroupTitle}>{group.title}</div>
               {group.items.map((item, index) => (
-                <button
-                  key={item.key}
+                <div
+                  //key={item.key}
                   className={styles.dropdownItemName}
+
                   onClick={() => handleItemClick(item)}
                 >
                   {item.name}
-                </button>
+                  <div className={styles.dropdownItemDescription}>
+                    {item.description}
+                  </div>
+                </div >
               ))}
             </div>
           ))}
