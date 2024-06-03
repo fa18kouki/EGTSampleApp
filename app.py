@@ -23,7 +23,12 @@ from azure.identity.aio import (
 )
 from openai import AsyncOpenAI
 from openai import AsyncAzureOpenAI
-from backend.auth.auth_utils import get_authenticated_user_details, fetch_users
+from backend.auth.auth_utils import (
+    get_authenticated_user_details, 
+    fetch_users,
+    signup,
+    verify_email
+)
 from backend.history.cosmosdbservice import CosmosConversationClient
 from backend.prompt.cosmosdbservice import CosmosPromptClient
 from backend.utils import (
@@ -31,7 +36,7 @@ from backend.utils import (
     format_stream_response,
     generateFilterString,
     parse_multi_columns,
-    format_non_streaming_response,    
+    format_non_streaming_response,
 )
 
 bp = Blueprint("routes", __name__, static_folder="static",
@@ -60,7 +65,6 @@ def create_app():
     app = Quart(__name__)
     app.register_blueprint(bp)
     app.config["TEMPLATES_AUTO_RELOAD"] = True
-    app.secret_key = 'your_secure_secret_key'  # セッションを安全に扱うために強力な秘密鍵を設定
     return app
 
 
@@ -84,9 +88,9 @@ DEBUG = os.environ.get("DEBUG", "false")
 if DEBUG.lower() == "true":
     logging.basicConfig(level=logging.DEBUG)
 
-USER_AGENT = "kouki"
+USER_AGENT = "egt-gpt-3-azure-openai"
 
-#OPEM AI API KEY
+# OPEM AI API KEY
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 
 # On Your Data Settings
@@ -163,7 +167,8 @@ AZURE_COSMOSDB_ENABLE_FEEDBACK = (
     os.environ.get("AZURE_COSMOSDB_ENABLE_FEEDBACK", "false").lower() == "true"
 )
 # Prompt CosmosDB Integration Settings
-AZURE_COSMOSDB_PROMPTS_CONTAINER = os.environ.get("AZURE_COSMOSDB_PROMPTS_CONTAINER", "prompts")
+AZURE_COSMOSDB_PROMPTS_CONTAINER = os.environ.get(
+    "AZURE_COSMOSDB_PROMPTS_CONTAINER", "prompts")
 # Frontend Settings via Environment Variables
 AUTH_ENABLED = os.environ.get("AUTH_ENABLED", "true").lower() == "true"
 CHAT_HISTORY_ENABLED = (
@@ -189,10 +194,51 @@ frontend_settings = {
 
 # Initialize Azure OpenAI Client
 def init_openai_client():
-    azure_openai_client = None
+    openai_client = None
     try:
         # Authentication
         aoai_api_key = OPENAI_API_KEY
+        # Default Headers
+        default_headers = {"x-ms-useragent": USER_AGENT}
+
+        openai_client = AsyncOpenAI(
+            api_key=aoai_api_key,
+            default_headers=default_headers
+        )
+
+        return openai_client
+    except Exception as e:
+        logging.exception("Exception in Azure OpenAI initialization", e)
+        azure_openai_client = None
+        raise e
+
+# Initialize Azure OpenAI Client
+def init_azopenai_client():
+    azure_openai_client = None
+    try:
+        # API version check
+        if (
+            AZURE_OPENAI_PREVIEW_API_VERSION
+            < MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION
+        ):
+            raise Exception(
+                f"The minimum supported Azure OpenAI preview API version is '{MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION}'"
+            )
+
+        # Endpoint
+        if not AZURE_OPENAI_ENDPOINT and not AZURE_OPENAI_RESOURCE:
+            raise Exception(
+                "AZURE_OPENAI_ENDPOINT or AZURE_OPENAI_RESOURCE is required"
+            )
+
+        endpoint = (
+            AZURE_OPENAI_ENDPOINT
+            if AZURE_OPENAI_ENDPOINT
+            else f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com/"
+        )
+
+        # Authentication
+        aoai_api_key = AZURE_OPENAI_KEY
         ad_token_provider = None
         if not aoai_api_key:
             logging.debug("No AZURE_OPENAI_KEY found, using Azure AD auth")
@@ -207,12 +253,15 @@ def init_openai_client():
         # Default Headers
         default_headers = {"x-ms-useragent": USER_AGENT}
 
-        openai_client = AsyncOpenAI(
+        azure_openai_client = AsyncAzureOpenAI(
+            api_version=AZURE_OPENAI_PREVIEW_API_VERSION,
             api_key=aoai_api_key,
-            default_headers=default_headers
+            azure_ad_token_provider=ad_token_provider,
+            default_headers=default_headers,
+            azure_endpoint=endpoint,
         )
 
-        return openai_client
+        return azure_openai_client
     except Exception as e:
         logging.exception("Exception in Azure OpenAI initialization", e)
         azure_openai_client = None
@@ -271,13 +320,23 @@ def init_prompt_cosmosdb_client():
 
     return cosmos_prompt_client
 
+
 def prepare_model_args(request_body):
     request_messages = request_body.get("messages", [])
-    # gptModel= AZURE_OPENAI_GPT35_TURBO_16K_DEPLOYMENT
-    if request_body.get("gptModel") == "gpt-4":
-        gptModel = AZURE_OPENAI_GPT4_DEPLOYMENT
+    gptModel= request_body.get("gptModel", "gpt-3.5-turbo-0125")
+    if gptModel == "gpt-3.5-turbo-0125":
+        gptModel = "gpt-3.5-turbo-0125"
+    elif gptModel == "gpt-4":
+        gptModel = "gpt-4"
+    elif gptModel == "gpt-4o":
+        gptModel = "gpt-4o"
+    elif gptModel == "az-gpt-3.5":
+        gptModel = AZURE_OPENAI_GPT35_TURBO_16K_MODEL
+    elif gptModel == "az-gpt-4":
+        gptModel = AZURE_OPENAI_GPT4_MODEL
     else:
-        gptModel = AZURE_OPENAI_GPT35_TURBO_16K_DEPLOYMENT
+        gptModel = "gpt-3.5-turbo-0125"
+    
     messages = []
     for message in request_messages:
         if message:
@@ -295,7 +354,7 @@ def prepare_model_args(request_body):
             else None
         ),
         "stream": True,
-        "model": "gpt-4o" ,
+        "model": gptModel,
     }
     model_args_clean = copy.deepcopy(model_args)
     if model_args_clean.get("extra_body"):
@@ -360,6 +419,7 @@ async def stream_chat_request(request_body):
     response = await send_chat_request(request_body)
     history_metadata = request_body.get("history_metadata", {})
     print("History Metadata: ", history_metadata)
+
     async def generate():
         async for completionChunk in response:
             yield format_stream_response(completionChunk, history_metadata)
@@ -371,7 +431,7 @@ async def conversation_internal(request_body):
     try:
         if SHOULD_STREAM:
             result = await stream_chat_request(request_body)
-            print("Result: " ,result)
+            print("Result: ", result)
             response = await make_response(format_as_ndjson(result))
             print("Response: ", response)
             response.timeout = None
@@ -389,17 +449,20 @@ async def conversation_internal(request_body):
             return jsonify({"error": str(ex)}), 500
 
 # 会話エンドポイントのルートを定義
+
+
 @bp.route("/conversation", methods=["POST"])
 async def conversation():
     # リクエストがJSON形式であることを確認
     if not request.is_json:
         return jsonify({"error": "request must be json"}), 415
-    
+
     # リクエストのJSONデータを取得
     request_json = await request.get_json()
 
     # 内部の会話処理関数を呼び出し、その結果を返す
     return await conversation_internal(request_json)
+
 
 @bp.route("/frontend_settings", methods=["GET"])
 def get_frontend_settings():
@@ -416,6 +479,8 @@ def get_frontend_settings():
         return jsonify({"error": "An unexpected error occurred"}), 500
 
 ## Conversation History API ##
+
+
 @bp.route("/history/generate", methods=["POST"])
 async def add_conversation():
     authenticated_user = get_authenticated_user_details(
@@ -658,7 +723,7 @@ async def get_conversation():
     authenticated_user = get_authenticated_user_details(
         request_headers=request.headers)
     user_id = authenticated_user["user_principal_id"]
-    # check request for conversation_id 
+    # check request for conversation_id
     request_json = await request.get_json()
     conversation_id = request_json.get("conversation_id", None)
 
@@ -877,7 +942,9 @@ async def ensure_cosmos():
         else:
             return jsonify({"error": "CosmosDB is not working"}), 500
 
-##Prompt API ##
+## Prompt API ##
+
+
 @bp.route("/prompt/get_prompts", methods=["GET"])
 async def get_prompts():
     try:
@@ -890,16 +957,17 @@ async def get_prompts():
         await cosmos_prompt_client.cosmosdb_client.close()
 
         return jsonify(prompts), 200
-    except Exception as  e:
+    except Exception as e:
         logging.exception("Exception in /get_prompt")
         return jsonify({"error": str(e)}), 500
+
 
 @bp.route("/prompt/add", methods=["POST"])
 async def add_prompt():
     request_json = await request.get_json()
     prompt = request_json.get("prompt", None)
     user_name = request_json.get("user_name", "anounimous")
-    tags = request_json.get("tags",None)
+    tags = request_json.get("tags", None)
     if not prompt:
         return jsonify({"error": "prompt is required"}), 400
 
@@ -921,8 +989,8 @@ async def add_prompt():
         logging.exception("Exception in /add_prompt")
         return jsonify({"error": str(e)}), 500
 
-##Auth API ##
-'''
+## Auth API ##
+
 @bp.route("/auth/login", methods=["POST"])
 async def login_route():
     async def login():
@@ -943,40 +1011,39 @@ async def logout_route():
 
 
 @bp.route("/auth/signup", methods=["POST"])
-async def signup_route():
-    return await signup()
+async def sign_up():
+    try:
+        signup(request_headers=request.headers)
+        return jsonify({"message": "Signup successful"}), 200
+    except Exception as e:
+        logging.exception("Exception in signup")
+        return jsonify({"error": str(e)}), 500
 
 
 @bp.route("/auth/delete/<user_id>", methods=["DELETE"])
 async def delete_user(user_id):
     return await delete_user(user_id)
-'''
+
+@bp.route("/auth/verify", methods=["POST"])
+async def verify_user():
+    return await verify_email()
+
 @bp.route('/auth/me', methods=['GET'])
-def auth_me():
-    # get the user id from the request headers
-    authenticated_user = get_authenticated_user_details(
-        request_headers=request.headers)
-    user_id = authenticated_user["user_principal_id"]
+async def get_user_info():
+    try:
+        user_object = await get_authenticated_user_details(request_headers=request.headers)
+        return jsonify({
+            "username": user_object["username"],
+            "email": user_object["email"],
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 401
+
 
 @bp.route('/users', methods=['GET'])
 def users():
     users = fetch_users()
     return jsonify(users), 200
-
-@bp.route('/user/<uid>', methods=['GET'])
-def get_user(uid):
-    try:
-        user = auth.get_user(uid)
-        return jsonify({
-            'uid': user.uid,
-            'email': user.email,
-            'displayName': user.display_name,
-            'photoURL': user.photo_url,
-            'phoneNumber': user.phone_number,
-            'disabled': user.disabled
-        })
-    except firebase_admin.auth.AuthError as e:
-        return jsonify({'error': str(e)}), 400
 
 async def generate_title(conversation_messages):
     # make sure the messages are sorted by _ts descending

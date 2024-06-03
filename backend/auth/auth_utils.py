@@ -6,6 +6,7 @@ import json
 
 load_dotenv()
 
+
 def initialize_firebase():
     if not firebase_admin._apps:
         firebase_credentials = {
@@ -24,6 +25,7 @@ def initialize_firebase():
         cred = credentials.Certificate(firebase_credentials)
         firebase_admin.initialize_app(cred)
 
+
 def get_authenticated_user_details(request_headers):
     initialize_firebase()
     user_object = {}
@@ -35,8 +37,35 @@ def get_authenticated_user_details(request_headers):
     else:
         id_token = request_headers.get('Authorization').split('Bearer ')[1]
         decoded_token = auth.verify_id_token(id_token)
+        print("Decoded token: ", decoded_token)
         user_object['user_principal_id'] = decoded_token['uid']
+        user_object['email'] = decoded_token['email']
     return user_object
+
+
+def signup(request_headers):
+    
+    initialize_firebase()
+    email = request_headers.get('email')
+    password = request_headers.get('password')
+    user = auth.create_user(email=email, password=password)
+    # メール認証リンクを作成
+    email_verification_link = auth.generate_email_verification_link(email)
+    # メール送信の処理はここで行う
+    #send_email_verification(email, email_verification_link)
+    print(f"Email verification link sent to {email}")
+    return
+
+
+def verify_email(oob_code):
+    """
+    コードを用いてアドレス認証を完了させる
+    :param oob_code: アドレス認証実行用コード
+    """
+    auth.apply_action_code(oob_code)
+    print("Email verified")
+    return
+
 
 def fetch_users():
     initialize_firebase()
@@ -47,6 +76,7 @@ def fetch_users():
             users.append(user.__dict__)
         page = page.get_next_page()
     return users
+
 
 def get_user(uid):
     initialize_firebase()

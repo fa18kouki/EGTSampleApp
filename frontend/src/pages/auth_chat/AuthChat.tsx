@@ -113,6 +113,7 @@ const AuthChat = () => {
   }
   const onItemSelect = (item:Item) => {
     setGptModel(item.key as string);
+    console.log("Selected item: ", item.key);
   };
   /*
   const onGptModelChange = (

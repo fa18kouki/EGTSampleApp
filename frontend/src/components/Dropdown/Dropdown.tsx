@@ -25,12 +25,17 @@ export const Dropdown: React.FC<DropdownProps> = ({ onItemSelect }) => {
         {
           name: "GPT-3.5",
           description: "OpenAIによって開発された高度な言語モデル",
-          key: "gpt-3.5",
+          key: "gpt-3.5-turbo-0125",
         },
         {
           name: "GPT-4",
           description: "GPTシリーズの最新かつ最強のモデル",
             key: "gpt-4",
+        },
+        {
+          name: "GPT-4o",
+          description: "GPT-4のオープンソース版",
+            key: "gpt-4o",
         },
       ],
     },

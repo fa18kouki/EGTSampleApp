@@ -83,8 +83,6 @@ export const AppStateProvider: React.FC<AppStateProviderProps> = ({ children }) 
     onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
         dispatch({ type: 'UPDATE_USER', payload: currentUser });
-        console.log('currentUser: ', currentUser);
-        console.log('UserState: ', state);
       } else {
         dispatch({ type: 'UPDATE_USER', payload: null });
       }
