@@ -1,28 +1,37 @@
 import React, { useState, useEffect, FormEvent, ChangeEvent } from "react";
 import {
-  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
   onAuthStateChanged,
-  updateProfile,
-  User
+  User,
 } from "firebase/auth";
 import { auth } from "../../../FirebaseConfig";
 import { Navigate, Link } from "react-router-dom";
+import styles from "./Signup.module.css"; // CSSファイルをインポート
 
-const SignUp: React.FC = () => {
-  const [registerEmail, setRegisterEmail] = useState<string>("");
-  const [registerPassword, setRegisterPassword] = useState<string>("");
-  const [registerUsername, setRegisterUsername] = useState<string>("");
+const Signup: React.FC = () => {
+  const [loginEmail, setLoginEmail] = useState<string>("");
+  const [loginPassword, setLoginPassword] = useState<string>("");
   const [user, setUser] = useState<User | null>(null);
-
+  const [errorMessage, setErrorMessage] = useState<string>("");
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [username, setUsername] = useState<string>("");
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, registerEmail, registerPassword);
-      const user = userCredential.user;
-      await updateProfile(user, { displayName: registerUsername });
-    } catch (error) {
-      alert("正しく入力してください");
+      await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
+    } catch (errorMessage) {
+      console.log(errorMessage);
+      if (
+        errorMessage === "auth/wrong-password" ||
+        errorMessage === "auth/user-not-found"
+      ) {
+        setErrorMessage("メールアドレスまたはパスワードが間違っています");
+      } else if (errorMessage === "auth/user-not-found") {
+        setErrorMessage("ユーザーが見つかりませんでした");
+      } else {
+        setErrorMessage("エラーが発生しました");
+      }
     }
   };
 
@@ -37,43 +46,55 @@ const SignUp: React.FC = () => {
       {user ? (
         <Navigate to={`/`} />
       ) : (
-        <>
-          <h1>新規登録</h1>
-          <form onSubmit={handleSubmit}>
-            <div>
-              <label>ユーザー名</label>
-              <input
-                name="username"
-                type="text"
-                value={registerUsername}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => setRegisterUsername(e.target.value)}
-              />
-            </div>
-            <div>
-              <label>メールアドレス</label>
-              <input
-                name="email"
-                type="email"
-                value={registerEmail}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => setRegisterEmail(e.target.value)}
-              />
-            </div>
-            <div>
-              <label>パスワード</label>
-              <input
-                name="password"
-                type="password"
-                value={registerPassword}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => setRegisterPassword(e.target.value)}
-              />
-            </div>
-            <button>登録する</button>
-            <p>ログインは<Link to={`/login/`}>こちら</Link></p>
-          </form>
-        </>
+        <div className={styles.container}>
+          <div className={styles.formWrapper}>
+            <h1 className={styles.title}>ユーザー新規作成ページ</h1>
+            <form onSubmit={handleSubmit}>
+              <div className="errorMessage">{errorMessage}</div>
+              <div className={styles.inputGroup}>
+                <label className={styles.label}>ユーザー名</label>
+                <input
+                  name="username"
+                  type="text"
+                  value={username}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    setUsername(e.target.value)
+                  }
+                  className={styles.input}
+                />
+              </div>
+              <div className={styles.inputGroup}>
+                <label className={styles.label}>メールアドレス</label>
+                <input
+                  name="email"
+                  type="email"
+                  value={loginEmail}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    setLoginEmail(e.target.value)
+                  }
+                  className={styles.input}
+                />
+              </div>
+              <div className={styles.inputGroup}>
+                <label className={styles.label}>パスワード</label>
+                <input
+                  name="password"
+                  type="password"
+                  value={loginPassword}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    setLoginPassword(e.target.value)
+                  }
+                  className={styles.input}
+                />
+                <div className="inputGroup"></div>
+              </div>
+              <button className={styles.button}>ユーザー新規作成</button>
+            </form>
+          </div>
+        </div>
       )}
     </>
   );
 };
 
-export default SignUp;
+export default Signup;

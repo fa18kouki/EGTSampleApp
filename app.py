@@ -26,8 +26,9 @@ from openai import AsyncAzureOpenAI
 from backend.auth.auth_utils import (
     get_authenticated_user_details, 
     fetch_users,
-    signup,
-    verify_email
+    verify_email,
+    set_custom_claims,
+    AuthError
 )
 from backend.history.cosmosdbservice import CosmosConversationClient
 from backend.prompt.cosmosdbservice import CosmosPromptClient
@@ -797,7 +798,7 @@ async def rename_conversation():
         return (
             jsonify(
                 {
-                    "error": f"Conversation {conversation_id} was not found. It either does not exist or the logged in user does not have access to it."
+                    "error": f"会話 {conversation_id} が見つかりませんでした。存在しないか、ログインしているユーザーがアクセス権を持っていない可能性があります。"
                 }
             ),
             404,
@@ -828,13 +829,13 @@ async def delete_all_conversations():
         # make sure cosmos is configured
         cosmos_conversation_client = init_conversation_cosmosdb_client()
         if not cosmos_conversation_client:
-            raise Exception("CosmosDB is not configured or not working")
+            raise Exception("CosmosDBが構成されていないか、動作していません")
 
         conversations = await cosmos_conversation_client.get_conversations(
             user_id, offset=0, limit=None
         )
         if not conversations:
-            return jsonify({"error": f"No conversations for {user_id} were found"}), 404
+            return jsonify({"error": f"{user_id} の会話が見つかりませんでした"}), 404
 
         # delete each conversation
         for conversation in conversations:
@@ -851,7 +852,7 @@ async def delete_all_conversations():
         return (
             jsonify(
                 {
-                    "message": f"Successfully deleted conversation and messages for user {user_id}"
+                    "message": f"ユーザー {user_id} の会話とメッセージを正常に削除しました"
                 }
             ),
             200,
@@ -859,8 +860,7 @@ async def delete_all_conversations():
 
     except Exception as e:
         logging.exception("Exception in /history/delete_all")
-        return jsonify({"error": str(e)}), 500
-
+        return jsonify({"error": f"エラーが発生しました: {str(e)}"}), 500
 
 @bp.route("/history/clear", methods=["POST"])
 async def clear_messages():
@@ -875,12 +875,12 @@ async def clear_messages():
 
     try:
         if not conversation_id:
-            return jsonify({"error": "conversation_id is required"}), 400
+            return jsonify({"error": "conversation_idは必須です"}), 400
 
         # make sure cosmos is configured
         cosmos_conversation_client = init_conversation_cosmosdb_client()
         if not cosmos_conversation_client:
-            raise Exception("CosmosDB is not configured or not working")
+            raise Exception("CosmosDBが構成されていないか、動作していません")
 
         # delete the conversation messages from cosmos
         deleted_messages = await cosmos_conversation_client.delete_messages(
@@ -890,7 +890,7 @@ async def clear_messages():
         return (
             jsonify(
                 {
-                    "message": "Successfully deleted messages in conversation",
+                    "message": "会話内のメッセージを正常に削除しました",
                     "conversation_id": conversation_id,
                 }
             ),
@@ -898,13 +898,11 @@ async def clear_messages():
         )
     except Exception as e:
         logging.exception("Exception in /history/clear_messages")
-        return jsonify({"error": str(e)}), 500
-
-
+        return jsonify({"error": f"エラーが発生しました: {str(e)}"}), 500
 @bp.route("/history/ensure", methods=["GET"])
 async def ensure_cosmos():
     if not AZURE_COSMOSDB_ACCOUNT:
-        return jsonify({"error": "CosmosDB is not configured"}), 404
+        return jsonify({"error": "CosmosDBが構成されていません"}), 404
 
     try:
         cosmos_conversation_client = init_conversation_cosmosdb_client()
@@ -912,10 +910,10 @@ async def ensure_cosmos():
         if not cosmos_conversation_client or not success:
             if err:
                 return jsonify({"error": err}), 422
-            return jsonify({"error": "CosmosDB is not configured or not working"}), 500
+            return jsonify({"error": "CosmosDBが構成されていないか、動作していません"}), 500
 
         await cosmos_conversation_client.cosmosdb_client.close()
-        return jsonify({"message": "CosmosDB is configured and working"}), 200
+        return jsonify({"message": "CosmosDBは構成されており、動作しています"}), 200
     except Exception as e:
         logging.exception("Exception in /history/ensure")
         cosmos_exception = str(e)
@@ -925,7 +923,7 @@ async def ensure_cosmos():
             return (
                 jsonify(
                     {
-                        "error": f"{cosmos_exception} {AZURE_COSMOSDB_DATABASE} for account {AZURE_COSMOSDB_ACCOUNT}"
+                        "error": f"{cosmos_exception} アカウント {AZURE_COSMOSDB_ACCOUNT} のデータベース {AZURE_COSMOSDB_DATABASE}"
                     }
                 ),
                 422,
@@ -934,14 +932,13 @@ async def ensure_cosmos():
             return (
                 jsonify(
                     {
-                        "error": f"{cosmos_exception}: {AZURE_COSMOSDB_CONVERSATIONS_CONTAINER}"
+                        "error": f"{cosmos_exception}: コンテナ {AZURE_COSMOSDB_CONVERSATIONS_CONTAINER}"
                     }
                 ),
                 422,
             )
         else:
-            return jsonify({"error": "CosmosDB is not working"}), 500
-
+            return jsonify({"error": "CosmosDBが動作していません"}), 500
 ## Prompt API ##
 
 
@@ -990,60 +987,59 @@ async def add_prompt():
         return jsonify({"error": str(e)}), 500
 
 ## Auth API ##
-
-@bp.route("/auth/login", methods=["POST"])
-async def login_route():
-    async def login():
-        if request.method == 'POST':
-            session['username'] = request.form['username']
-            response = await make_response(redirect(url_for('index')))
-            # CookieにHttpOnlyとSecure属性を設定
-            response.set_cookie('session', session.sid, httponly=True, secure=True, samesite='Lax')
-            return response
-        return await render_template('login.html')
-
-@bp.route("/auth/logout", methods=["GET"])
-async def logout_route():
-    session.pop('username', None)
-    response = await make_response(redirect(url_for('index')))
-    response.set_cookie('session', '', expires=0)
-    return response
-
-
-@bp.route("/auth/signup", methods=["POST"])
-async def sign_up():
+@bp.route("/auth/verify_email/", methods=["POST"])
+async def verify_user():
     try:
-        signup(request_headers=request.headers)
-        return jsonify({"message": "Signup successful"}), 200
+        await verify_email(request_headers=request.headers)
+        return jsonify({"message": "Email verification link sent"}), 200
+    except AuthError as e:
+        logging.exception("AuthError in verify_user")
+        return jsonify({"error": str(e)}), 500
     except Exception as e:
-        logging.exception("Exception in signup")
+        logging.exception("Exception in verify_user")
         return jsonify({"error": str(e)}), 500
 
-
-@bp.route("/auth/delete/<user_id>", methods=["DELETE"])
-async def delete_user(user_id):
-    return await delete_user(user_id)
-
-@bp.route("/auth/verify", methods=["POST"])
-async def verify_user():
-    return await verify_email()
 
 @bp.route('/auth/me', methods=['GET'])
 async def get_user_info():
     try:
-        user_object = await get_authenticated_user_details(request_headers=request.headers)
+        user_object = get_authenticated_user_details(request_headers=request.headers)
         return jsonify({
-            "username": user_object["username"],
+            "user_principal_id": user_object["user_principal_id"],
             "email": user_object["email"],
-        })
-    except Exception as e:
+            "display_name": user_object["display_name"],
+        }), 200
+    except AuthError as e:
+        logging.exception("AuthError in get_user_info")
         return jsonify({"error": str(e)}), 401
+    except Exception as e:
+        logging.exception("Exception in get_user_info")
+        return jsonify({"error": str(e)}), 500
+
+@bp.route('/auth/set_custom_claims', methods=['POST'])
+async def set_custom_claims_route():
+    try:
+        await set_custom_claims(request_headers=request.headers)
+        return jsonify({"message": "Custom claims set successfully"}), 200
+    except AuthError as e:
+        logging.exception("AuthError in set_custom_claims_route")
+        return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        logging.exception("Exception in set_custom_claims_route")
+        return jsonify({"error": str(e)}), 500
 
 
 @bp.route('/users', methods=['GET'])
-def users():
-    users = fetch_users()
-    return jsonify(users), 200
+async def users():
+    try:
+        users = fetch_users()
+        return jsonify(users), 200
+    except AuthError as e:
+        logging.exception("AuthError in users")
+        return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        logging.exception("Exception in users")
+        return jsonify({"error": str(e)}), 500
 
 async def generate_title(conversation_messages):
     # make sure the messages are sorted by _ts descending

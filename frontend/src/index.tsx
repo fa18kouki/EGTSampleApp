@@ -10,7 +10,7 @@ import NoPage from "./pages/NoPage";
 import Mypage from "./pages/mypage/Mypage";
 import AuthChat from "./pages/auth_chat/AuthChat";
 import Login from  "./pages/login/Login";
-import SignUp from "./pages/signup/Signup";
+import Signup from "./pages/signup/Signup";
 import { AppStateProvider } from "./state/AppProvider";
 
 initializeIcons();
@@ -23,7 +23,7 @@ export default function App() {
                     <Route path="/" element={<Layout />}>
                         <Route index element={<AuthChat />} />
                         <Route path="login" element={<Login />} />
-                        <Route path="signup" element={<SignUp/>} />
+                        <Route path="signup" element={<Signup/>} />
                         <Route path="prompts" element={<Prompts />} />
                         <Route path="mypage" element={<Mypage />} />
                         <Route path="*" element={<NoPage />} />

@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.container {
+    @apply flex justify-center items-center h-screen bg-gray-100;
+}
+
+.formWrapper {
+    @apply p-8 rounded-lg shadow-lg bg-white max-w-md w-full;
+}
+
+.title {
+    @apply text-center mb-4 text-gray-800;
+}
+
+.errorMessage {
+    @apply text-red-600;
+}
+
+.inputGroup {
+    @apply mb-4;
+}
+
+.label {
+    @apply block mb-2 text-gray-600;
+}
+
+.input {
+    @apply w-full p-2 rounded border border-gray-300;
+}
+
+.button {
+    @apply w-full p-3 rounded border-none bg-gray-600 text-white text-lg cursor-pointer;
+}
+
+.button:hover {
+    @apply bg-gray-900;
+}
+
+.signupText {
+    @apply text-center mt-4 text-gray-600;
+}
+
+.link {
+    @apply text-gray-700;
+}
+
+.link:hover {
+    @apply underline;
+}

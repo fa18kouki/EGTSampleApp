@@ -1,170 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 .layout {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
+    @apply flex flex-col h-full;
 }
 
 .header {
-    background-color: #222222;
-    color: #f2f2f2;
-    height: 64px;
-    margin-bottom: 20px;
+    @apply bg-gray-900 text-gray-200 h-16 mb-5;
 }
 
 .headerContainer {
-    display: flex;
-    align-items: center;
-    justify-content: space-around;
-    margin-right: 12px;
-    margin-left: 12px;
+    @apply flex items-center justify-around mx-3;
 }
 
-.headerTitleContainer { 
-    display: flex;
-    align-items: center;
-    margin-right: 40px;
-    color: #f2f2f2;
-    text-decoration: none;
+.headerTitleContainer {
+    @apply flex items-center mr-10 text-gray-200 no-underline;
 }
 
 .headerLogo {
-    height: 40px;
+    @apply h-10;
 }
 
-.headerTitle {
-    float: left;
-    margin-left: 12px;
-    font-weight: 600;
+.headerTitle, .headerTitleLeft, .headerTitleRight {
+    @apply ml-3 font-semibold;
 }
 
 .headerTitleLeft {
-    margin-left: 12px;
-    font-weight: 600;
-    text-align: left;
+    @apply text-left;
 }
 
 .headerTitleRight {
-    margin-left: 12px;
-    font-weight: 600;
-    text-align: right;
+    @apply text-right;
 }
 
 .headerNavList {
-    display: flex;
-    list-style: none;
-    justify-content: space-around; /* または space-between */
+    @apply flex list-none justify-around;
 }
+
 .headerNavPageLink {
-    color: #f2f2f2;
-    text-decoration: none;
-    opacity: 0.4;
-
-    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-    transition-duration: 500ms;
-    transition-property: opacity;
+    @apply text-gray-200 no-underline opacity-40 transition-opacity duration-500 ease-in-out;
 }
 
-.headerNavPageLink:hover {
-    opacity: 1;
-}
-
-.headerNavPageLinkActive {
-    opacity: 1;
-    color: #f2f2f2;
-    text-decoration: none;
+.headerNavPageLink:hover, .headerNavPageLinkActive {
+    @apply opacity-100;
 }
 
 .headerNavLeftMargin {
-    margin-left: 20px;
+    @apply ml-5;
 }
+
 .headerNavRightMargin {
-    margin-right: 20px;
-}
-
-
-.headerContainer {
-    display: flex;
-    align-items: center;
-    justify-content: space-around;
-    margin-right: 12px;
-    margin-left: 12px;
+    @apply mr-5;
 }
 
 .headerIcon {
-    height: 32px;
-    width: auto;
-    margin-left: 36px;
+    @apply h-8 w-auto ml-9;
 }
 
 .shareButtonContainer {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    margin-right: 20px;
+    @apply flex flex-row justify-center mr-5;
 }
 
-.shareButton {
-    color: #FFFFFF;
-}
-
-.shareButtonText {
-    font-style: normal;
-    font-weight: 600;
-    font-size: 14px;
-    line-height: 20px;
-    display: flex;
-    align-items: center;
-    color: #FFFFFF;
+.shareButton, .shareButtonText {
+    @apply text-white;
 }
 
 .urlTextBox {
-    font-style: normal;
-    font-weight: 400;
-    font-size: 14px;
-    line-height: 20px;
-    color: #707070;
-    border: 1px solid #D1D1D1;
-    border-radius: 4px;
+    @apply text-gray-500 border border-gray-300 rounded;
 }
 
 .copyButtonContainer {
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    padding: 5px 12px;
-    gap: 4px;
-    background: #FFFFFF;
-    border: 1px solid #D1D1D1;
-    border-radius: 4px;
+    @apply box-border flex flex-row justify-center items-center p-1.5 gap-1 bg-white border border-gray-300 rounded;
 }
 
 .copyButtonContainer:hover {
-    cursor: pointer;
-    background: #D1D1D1;
+    @apply cursor-pointer bg-gray-300;
 }
 
 .copyButton {
-    color: #424242;
+    @apply text-gray-700;
 }
 
 .copyButtonText {
-    font-style: normal;
-    font-weight: 600;
-    font-size: 14px;
-    line-height: 20px;
-    display: flex;
-    align-items: center;
-    color: #242424;
+    @apply font-semibold text-sm leading-5 text-gray-800;
 }
 
 @media (max-width: 480px) {
     .headerTitleContainer {
-        margin-left: 4px;
+        @apply ml-1;
     }
 
     .headerIcon {
-        margin-left: 26px;
+        @apply ml-6;
     }
 }
