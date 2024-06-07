@@ -4,7 +4,7 @@ import { SendRegular, SendFilled } from "@fluentui/react-icons";
 import styles from "./QuestionInput.module.css";
 
 interface Props {
-    onSend: (question: string, file: File | null, id?: string) => void;
+    onSend: (question: string, file?: File | null, id?: string) => void;
     disabled: boolean;
     placeholder?: string;
     clearOnSend?: boolean;

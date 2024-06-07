@@ -67,6 +67,7 @@ export type ChatResponse = {
 export type ConversationRequest = {
     messages: ChatMessage[];
     gptModel: string;
+    file?: File;
 };
 
 export type UserInfo = {

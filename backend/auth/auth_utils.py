@@ -43,8 +43,10 @@ def get_authenticated_user_details(request_headers):
             decoded_token = auth.verify_id_token(id_token)
             print("Decoded token: ", decoded_token)
             user_object['user_principal_id'] = decoded_token['uid']
-            user_object['display_name'] = decoded_token['display_name']
-            user_object['email'] = decoded_token['email']
+            if 'email' in decoded_token.keys():
+                user_object['email'] = decoded_token['email']
+            if 'display_name' in decoded_token.keys():
+                user_object['display_name'] = decoded_token['display_name']
         return user_object
     except Exception as e:
         raise AuthError(f"Error in get_authenticated_user_details: {str(e)}")

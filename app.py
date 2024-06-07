@@ -418,6 +418,11 @@ async def complete_chat_request(request_body):
 
 async def stream_chat_request(request_body):
     response = await send_chat_request(request_body)
+    file = request_body.get("file", None)
+    if file:
+        with open(f'usr/{file.filename}', 'wb') as f:
+            f.write(file.read())
+    print("File: ", file)
     history_metadata = request_body.get("history_metadata", {})
     print("History Metadata: ", history_metadata)
 
@@ -460,10 +465,13 @@ async def conversation():
 
     # リクエストのJSONデータを取得
     request_json = await request.get_json()
-
-    # 内部の会話処理関数を呼び出し、その結果を返す
-    return await conversation_internal(request_json)
-
+    result = await stream_chat_request(request_json)
+    print("Result: ", result)
+    response = await make_response(format_as_ndjson(result))
+    print("Response: ", response)
+    response.timeout = None
+    response.mimetype = "application/json-lines"
+    return response
 
 @bp.route("/frontend_settings", methods=["GET"])
 def get_frontend_settings():
@@ -1004,6 +1012,7 @@ async def verify_user():
 async def get_user_info():
     try:
         user_object = get_authenticated_user_details(request_headers=request.headers)
+        print("User Object: ", user_object)
         return jsonify({
             "user_principal_id": user_object["user_principal_id"],
             "email": user_object["email"],

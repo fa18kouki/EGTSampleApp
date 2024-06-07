@@ -19,7 +19,7 @@ import {
   ShieldLockRegular,
   ErrorCircleRegular,
   PanelLeftTextRegular,
-  PanelLeftRegular
+  PanelLeftRegular,
 } from "@fluentui/react-icons";
 import {
   //Dropdown,
@@ -90,7 +90,7 @@ const AuthChat = () => {
   const [isCitationPanelOpen, setIsCitationPanelOpen] =
     useState<boolean>(false);
   const abortFuncs = useRef([] as AbortController[]);
-  const [showAuthMessage, setShowAuthMessage] = useState<boolean>(true);
+  //const [showAuthMessage, setShowAuthMessage] = useState<boolean>(true);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [processMessages, setProcessMessages] = useState<messageStatus>(
     messageStatus.NotRunning
@@ -111,7 +111,7 @@ const AuthChat = () => {
     description: string;
     key: string;
   }
-  const onItemSelect = (item:Item) => {
+  const onItemSelect = (item: Item) => {
     setGptModel(item.key as string);
     console.log("Selected item: ", item.key);
   };
@@ -170,7 +170,7 @@ const AuthChat = () => {
         ChatHistoryLoadingState.Loading
     );
   }, [appStateContext?.state.chatHistoryLoadingState]);
-
+  /*
   const getUserInfoList = async () => {
     if (!AUTH_ENABLED) {
       setShowAuthMessage(false);
@@ -183,6 +183,7 @@ const AuthChat = () => {
       setShowAuthMessage(false);
     }
   };
+  */
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -248,6 +249,7 @@ const AuthChat = () => {
 
   const makeApiRequestWithoutCosmosDB = async (
     question: string,
+    file?: null | File,
     conversationId?: string
   ) => {
     setIsLoading(true);
@@ -394,9 +396,10 @@ const AuthChat = () => {
 
     return abortController.abort();
   };
-  
+
   const makeApiRequestWithCosmosDB = async (
     question: string,
+    file?: null | File,
     conversationId?: string
   ) => {
     setIsLoading(true);
@@ -433,15 +436,18 @@ const AuthChat = () => {
             ...conversation.messages.filter((answer) => answer.role !== ERROR),
           ],
           gptModel: gptModel,
+          file: file ? file : undefined,
         };
       }
     } else {
       request = {
         messages: [userMessage].filter((answer) => answer.role !== ERROR),
         gptModel: gptModel,
+        file: file ? file : undefined,
       };
       setMessages(request.messages);
     }
+    console.log("Request: ", request);
     let result = {} as ChatResponse;
     try {
       const idToken = user ? await user.getIdToken() : "";
@@ -453,6 +459,7 @@ const AuthChat = () => {
             conversationId
           )
         : await historyGenerate(request, abortController.signal, idToken);
+
       if (!response?.ok) {
         const responseJson = await response.json();
         var errorResponseMessage =
@@ -786,11 +793,11 @@ const AuthChat = () => {
       setProcessMessages(messageStatus.NotRunning);
     }
   }, [processMessages]);
-
+  /*
   useEffect(() => {
     if (AUTH_ENABLED !== undefined) getUserInfoList();
   }, [AUTH_ENABLED]);
-
+  */
   useLayoutEffect(() => {
     chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" });
   }, [showLoadingMessage, processMessages]);
@@ -840,7 +847,7 @@ const AuthChat = () => {
                 {appStateContext?.state.isChatHistoryOpen &&
                   appStateContext?.state.isCosmosDBAvailable?.status !==
                     CosmosDBStatus.NotConfigured && (
-                      <ChatHistoryPanel
+                    <ChatHistoryPanel
                       newChat={newChat}
                       setMessages={setMessages}
                       setIsCitationPanelOpen={setIsCitationPanelOpen}
@@ -849,7 +856,7 @@ const AuthChat = () => {
                   )}
                 <div className={styles.chatContainer}>
                   <div className={styles.commandsContainer}>
-                  <Stack horizontal horizontalAlign="space-between">
+                    <Stack horizontal horizontalAlign="space-between">
                       <Stack horizontal>
                         {appStateContext?.state.isCosmosDBAvailable?.status !==
                           CosmosDBStatus.NotConfigured && (
@@ -872,9 +879,7 @@ const AuthChat = () => {
                           </>
                         )}
                       </Stack>
-                      <Dropdown
-                        onItemSelect={onItemSelect}
-                      />
+                      <Dropdown onItemSelect={onItemSelect} />
                     </Stack>
                   </div>
                   {!messages || messages.length < 1 ? (
@@ -1068,9 +1073,9 @@ const AuthChat = () => {
                         if (
                           appStateContext?.state.isCosmosDBAvailable?.cosmosDB
                         ) {
-                          makeApiRequestWithCosmosDB(question, id); // Updated to include file
+                          makeApiRequestWithCosmosDB(question, file, id); // Updated to include file
                         } else {
-                          makeApiRequestWithoutCosmosDB(question, id); // Updated to include file
+                          makeApiRequestWithoutCosmosDB(question, file, id); // Updated to include file
                         }
                       }}
                       conversationId={
