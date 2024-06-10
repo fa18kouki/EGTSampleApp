@@ -839,9 +839,13 @@ const AuthChat = () => {
     <>
       {!loading && (
         <>
-          {!user ? (
+          {(
+            /*
+          !user ? (
             <Navigate to={`/login/`} />
-          ) : (
+            */
+           true
+          ) && (
             <div className={styles.container} role="main">
               <Stack horizontal className={styles.chatRoot}>
                 {appStateContext?.state.isChatHistoryOpen &&

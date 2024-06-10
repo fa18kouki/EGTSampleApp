@@ -11,9 +11,8 @@
 }
 
 .headerContainer {
-    @apply flex items-center justify-around mx-3;
+    @apply flex items-center justify-center mx-3;
 }
-
 .headerTitleContainer {
     @apply flex items-center mr-10 text-gray-200 no-underline;
 }

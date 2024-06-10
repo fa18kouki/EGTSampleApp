@@ -18,6 +18,14 @@
     @apply text-red-600;
 }
 
+.emailErrorMessage {
+    @apply text-red-600;
+}
+
+.passwordErrorMessage {
+    @apply text-red-600;
+}
+
 .inputGroup {
     @apply mb-4;
 }

@@ -13,6 +13,8 @@ const Login: React.FC = () => {
   const [loginPassword, setLoginPassword] = useState<string>("");
   const [user, setUser] = useState<User | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>("");
+  const [emailErrorMessage, setEmailErrorMessage] = useState<string>("");
+  const [passwordErrorMessage, setPasswordErrorMessage] = useState<string>("");
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [company, setCompany] = useState<string>("");
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -50,7 +52,7 @@ const Login: React.FC = () => {
           <div className={styles.formWrapper}>
             <h1 className={styles.title}>ログインページ</h1>
             <form onSubmit={handleSubmit}>
-              <div className="errorMessage">{errorMessage}</div>
+              <div className={styles.errorMessage}>{errorMessage}</div>
               <div className={styles.inputGroup}>
                 <label className={styles.label}>会社名</label>
                 <input
@@ -63,6 +65,7 @@ const Login: React.FC = () => {
                   className={styles.input}
                 />
               </div>
+              <div className={styles.emailErrorMessage}>{emailErrorMessage}</div>
               <div className={styles.inputGroup}>
                 <label className={styles.label}>メールアドレス</label>
                 <input
@@ -75,6 +78,7 @@ const Login: React.FC = () => {
                   className={styles.input}
                 />
               </div>
+              <div className={styles.passwordErrorMessage}>{passwordErrorMessage}</div>
               <div className={styles.inputGroup}>
                 <label className={styles.label}>パスワード</label>
                 <input
