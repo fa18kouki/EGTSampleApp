@@ -99,7 +99,7 @@ const AuthChat = () => {
   const [hideErrorDialog, { toggle: toggleErrorDialog }] = useBoolean(true);
   const [errorMsg, setErrorMsg] = useState<ErrorMessage | null>();
   const [isConfigPanelOpen, setIsConfigPanelOpen] = useState(false);
-  const [gptModel, setGptModel] = useState<string>("gpt-3.5-turbo-16k");
+  const [gptModel, setGptModel] = useState<string>("gpt4-o");
   const errorDialogContentProps = {
     type: DialogType.close,
     title: errorMsg?.title,

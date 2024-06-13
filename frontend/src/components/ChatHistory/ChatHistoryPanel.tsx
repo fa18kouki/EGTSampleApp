@@ -157,7 +157,7 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
 
   return (
     <section
-      className={styles.container}
+      className="max-h-[calc(100vh-100px)] w-[300px]"
       data-is-scrollable
       aria-label={"チャット履歴パネル"}
     >
@@ -172,42 +172,19 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
           <Text
             role="heading"
             aria-level={2}
-            style={{
-              alignSelf: "center",
-              fontWeight: "600",
-              fontSize: "18px",
-              marginRight: "auto",
-              paddingLeft: "20px",
-            }}
+            className="self-center font-semibold text-lg mr-auto pl-5"
           >
             {appStateContext?.state.user?.displayName}
           </Text>
         </StackItem>
-        {/*
-        <StackItem>
-          <Text
-            role="heading"
-            aria-level={2}
-            style={{
-              alignSelf: "center",
-              fontWeight: "600",
-              fontSize: "18px",
-              marginRight: "auto",
-              paddingLeft: "20px",
-            }}
-          >
-            チャット履歴
-          </Text>
-        </StackItem>
-        */}
         <Stack verticalAlign="start">
-          <Stack horizontal styles={commandBarButtonStyle}>
+          <Stack horizontal className="h-[50px]">
             <CommandBarButton
               iconProps={{ iconName: "More" }}
               title={"メニューを表示"}
               onClick={onShowContextualMenu}
               aria-label={"メニューを表示"}
-              styles={commandBarStyle}
+              className="p-0 flex justify-center bg-transparent"
               role="button"
               id="moreButton"
             />
@@ -223,7 +200,7 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
               title={"隠す"}
               onClick={handleHistoryClick}
               aria-label={"隠すボタン"}
-              styles={commandBarStyle}
+              className="p-0 flex justify-center bg-transparent"
               role="button"
             />
           </Stack>
@@ -231,24 +208,9 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
       </Stack>
       <Stack
         aria-label="チャット履歴パネルの内容"
-        styles={{
-          root: {
-            display: "flex",
-            flexGrow: 1,
-            flexDirection: "column",
-            paddingTop: "2.5px",
-            maxWidth: "100%",
-          },
-        }}
-        style={{
-          display: "flex",
-          flexGrow: 1,
-          flexDirection: "column",
-          flexWrap: "wrap",
-          padding: "1px",
-        }}
+        className="flex flex-col flex-grow pt-0.5 max-w-full"
       >
-        <Stack className={styles.chatHistoryListContainer}>
+        <Stack className="overflow-hidden auto max-h-[calc(90vh-105px)]">
           {appStateContext?.state.chatHistoryLoadingState ===
             ChatHistoryLoadingState.Success &&
             appStateContext?.state.isCosmosDBAvailable.cosmosDB && (
@@ -262,33 +224,22 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
                   <Stack
                     horizontalAlign="center"
                     verticalAlign="center"
-                    style={{ width: "100%", marginTop: 10 }}
+                    className="w-full mt-2.5"
                   >
                     <StackItem>
-                      <Text
-                        style={{
-                          alignSelf: "center",
-                          fontWeight: "400",
-                          fontSize: 16,
-                        }}
-                      >
+                      <Text className="self-center font-normal text-base">
                         {appStateContext?.state.isCosmosDBAvailable?.status && (
                           <span>
                             {appStateContext?.state.isCosmosDBAvailable?.status}
                           </span>
                         )}
-                        {!appStateContext?.state.isCosmosDBAvailable
-                          ?.status && <span>チャット履歴の読み込みエラー</span>}
+                        {!appStateContext?.state.isCosmosDBAvailable?.status && (
+                          <span>チャット履歴の読み込みエラー</span>
+                        )}
                       </Text>
                     </StackItem>
                     <StackItem>
-                      <Text
-                        style={{
-                          alignSelf: "center",
-                          fontWeight: "400",
-                          fontSize: 14,
-                        }}
-                      >
+                      <Text className="self-center font-normal text-sm">
                         <span>現在、チャット履歴を保存できません</span>
                       </Text>
                     </StackItem>
@@ -304,29 +255,17 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
                   horizontal
                   horizontalAlign="center"
                   verticalAlign="center"
-                  style={{ width: "100%", marginTop: 10 }}
+                  className="w-full mt-2.5"
                 >
-                  <StackItem
-                    style={{ justifyContent: "center", alignItems: "center" }}
-                  >
+                  <StackItem className="justify-center items-center">
                     <Spinner
-                      style={{
-                        alignSelf: "flex-start",
-                        height: "100%",
-                        marginRight: "5px",
-                      }}
+                      className="self-start h-full mr-1.25"
                       size={SpinnerSize.medium}
                     />
                   </StackItem>
                   <StackItem>
-                    <Text
-                      style={{
-                        alignSelf: "center",
-                        fontWeight: "400",
-                        fontSize: 14,
-                      }}
-                    >
-                      <span style={{ whiteSpace: "pre-wrap" }}>
+                    <Text className="self-center font-normal text-sm">
+                      <span className="whitespace-pre-wrap">
                         チャット履歴を読み込み中
                       </span>
                     </Text>

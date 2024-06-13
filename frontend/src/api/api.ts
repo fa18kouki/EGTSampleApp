@@ -129,7 +129,7 @@ export const historyRead = async (convId: string,idToken?:string): Promise<ChatM
 }
 
 export const historyGenerate = async (options: ConversationRequest, abortSignal: AbortSignal, idToken?:string, convId?: string): Promise<Response> => {
-    const formData = new FormData();
+    var formData = new FormData();
     formData.append("messages", JSON.stringify(options.messages));
     formData.append("gptModel", options.gptModel);
     if (options.file) {
@@ -138,12 +138,13 @@ export const historyGenerate = async (options: ConversationRequest, abortSignal:
     if(convId){
         formData.append("conversation_id", convId)
     }
-    console.log("formData: ", formData)
+    console.log("messages: ", formData.get("messages"))
+    console.log("gptModel: ", formData.get("gptModel"))
+    console.log("file: ", formData.get("file"))
     const response = await fetch("/history/generate", {
         method: "POST",
         headers: {
-            "Authorization": `Bearer ${idToken}`,
-            "Content-Type": "multipart/form-data"
+            "Authorization": `Bearer ${idToken}`
         },
         body: formData,
         signal: abortSignal

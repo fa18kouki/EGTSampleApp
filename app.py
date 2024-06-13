@@ -415,7 +415,7 @@ async def complete_chat_request(request_body):
 
 
 async def stream_chat_request(request_body):
-    logging.debug("RequestBody: ", request_body.get("messages"))
+    logging.debug("RequestBody: %s", request_body.get("messages"))
     response = await send_chat_request(request_body)
     file = request_body.get("file", None)
     if file:
@@ -423,7 +423,7 @@ async def stream_chat_request(request_body):
         with open(f'usr/{file.filename}', 'wb') as f:
             f.write(file.read())
     history_metadata = request_body.get("history_metadata", {})
-    logging.debug("History Metadata: ", history_metadata)
+    logging.debug("History Metadata: %s", history_metadata)
 
     async def generate():
         async for completionChunk in response:
@@ -433,7 +433,7 @@ async def stream_chat_request(request_body):
 
 
 async def conversation_internal(request_body):
-    logging.debug("RequestBody: ", request_body)
+    logging.debug("RequestBody: %s", request_body)
     try:
         if SHOULD_STREAM:
             result = await stream_chat_request(request_body)
@@ -499,17 +499,31 @@ def get_frontend_settings():
 
 ## Conversation History API ##
 
-
 @bp.route("/history/generate", methods=["POST"])
 async def add_conversation():
     authenticated_user = get_authenticated_user_details(
         request_headers=request.headers)
     user_id = authenticated_user["user_principal_id"]
-
     # check request for conversation_id
-    request_json = await request.get_json()
-    conversation_id = request_json.get("conversation_id", None)
-    logging.debug(f"Request_json: {request_json}")
+    try:
+        form_data = await request.form
+        logging.info("フォームデータ: %s", form_data)
+        logging.info("メッセージ: %s", form_data.get('messages'))
+        logging.info("GPTモデル: %s", form_data.get('gptModel'))
+        # 非同期でファイルを取得
+        try:
+            files = await request.files
+            file = files.get('file')
+            logging.info("ファイル: %s", file)
+            logging.info("ファイルズ: %s", files)
+        except Exception as e:
+            logging.exception("Exception in /history/generate")
+            return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        logging.exception("Exception in /history/generate")
+        return jsonify({"error": str(e)}), 500
+
+    conversation_id = form_data.get("conversation_id", None)
     try:
         # make sure cosmos is configured
         cosmos_conversation_client = init_conversation_cosmosdb_client()
@@ -518,8 +532,12 @@ async def add_conversation():
 
         # check for the conversation_id, if the conversation is not set, we will create a new one
         history_metadata = {}
+        messages = json.loads(form_data.get("messages"))
+        gptModel = form_data.get("gptModel")
+        file = form_data.get("file")
+
         if not conversation_id:
-            title = await generate_title(request_json["messages"])
+            title = await generate_title(messages)
             conversation_dict = await cosmos_conversation_client.create_conversation(
                 user_id=user_id, title=title
             )
@@ -527,19 +545,10 @@ async def add_conversation():
             history_metadata["title"] = title
             history_metadata["date"] = conversation_dict["createdAt"]
 
-        # Format the incoming message object in the "chat/completions" messages format
-        # then write it to the conversation history in cosmos
-        logging.debug(f"Received request_json: {request_json}")
-        messages = request_json["messages"]
-        gptModel = request_json["gptModel"]
-        if request_json["file"]:
-            file = request_json["file"]
-            if file:
-                file.save(os.path.join('/path/to/save', file.filename))
-        else:
-            file = None
-        
-        token = request_json.get("token", 0)
+        if file:
+            file.save(os.path.join('/path/to/save', file.filename))
+
+        token = form_data.get("token", 0)
         if len(messages) > 0 and messages[-1]["role"] == "user":
             createdMessageValue = await cosmos_conversation_client.create_message(
                 uuid=str(uuid.uuid4()),
@@ -559,10 +568,12 @@ async def add_conversation():
 
         await cosmos_conversation_client.cosmosdb_client.close()
 
-        # Submit request to Chat Completions for response
-        request_body = await request.get_json()
-        history_metadata["conversation_id"] = conversation_id
-        request_body["history_metadata"] = history_metadata
+        request_body = {
+            "messages": messages,
+            "gptModel": gptModel,
+            "file": file,
+            "history_metadata": history_metadata
+        }
         return await conversation_internal(request_body)
 
     except Exception as e:
@@ -593,8 +604,7 @@ async def update_conversation():
         # Format the incoming message object in the "chat/completions" messages format
         # then write it to the conversation history in cosmos
         messages = request_json["messages"]
-        import logging
-        logging.debug(f"Received request_json: {request_json}")
+        logging.debug("Received request_json: %s", request_json)
         token = request_json.get("token", 0)
         if len(messages) > 0 and messages[-1]["role"] == "assistant":
             if len(messages) > 1 and messages[-2].get("role", None) == "tool":
@@ -723,11 +733,11 @@ async def delete_conversation():
 @bp.route("/history/list", methods=["GET"])
 async def list_conversations():
     offset = request.args.get("offset", 0)
-    logging.info(f"ヘッダー、offset: {request.headers,offset}")
+    logging.info("ヘッダー、offset: %s", (request.headers, offset))
     authenticated_user = get_authenticated_user_details(
         request_headers=request.headers)
     user_id = authenticated_user["user_principal_id"]
-    logging.info(f"ユーザーID: {user_id}")
+    logging.info("ユーザーID: %s", user_id)
     # make sure cosmos is configured
     cosmos_conversation_client = init_conversation_cosmosdb_client()
     if not cosmos_conversation_client:
