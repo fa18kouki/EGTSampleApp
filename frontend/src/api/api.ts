@@ -16,15 +16,16 @@ export async function Logout(): Promise<boolean> {
 }
 
 export async function conversationApi(options: ConversationRequest, abortSignal: AbortSignal): Promise<Response> {
+    const formData = new FormData();
+    formData.append("messages", JSON.stringify(options.messages));
+    formData.append("gptModel", options.gptModel);
+    if (options.file) {
+        formData.append("file", options.file);
+    }
+    console.log("formData: ", formData)
     const response = await fetch("/conversation", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            messages: options.messages,
-            gptModel: options.gptModel
-        }),
+        body: formData,
         signal: abortSignal
     });
 
@@ -128,24 +129,23 @@ export const historyRead = async (convId: string,idToken?:string): Promise<ChatM
 }
 
 export const historyGenerate = async (options: ConversationRequest, abortSignal: AbortSignal, idToken?:string, convId?: string): Promise<Response> => {
-    let body;
-    if(convId){
-        body = JSON.stringify({
-            conversation_id: convId,
-            messages: options.messages
-        })
-    }else{
-        body = JSON.stringify({
-            messages: options.messages
-        })
+    const formData = new FormData();
+    formData.append("messages", JSON.stringify(options.messages));
+    formData.append("gptModel", options.gptModel);
+    if (options.file) {
+        formData.append("file", options.file);
     }
+    if(convId){
+        formData.append("conversation_id", convId)
+    }
+    console.log("formData: ", formData)
     const response = await fetch("/history/generate", {
         method: "POST",
         headers: {
             "Authorization": `Bearer ${idToken}`,
-            "Content-Type": "application/json"
+            "Content-Type": "multipart/form-data"
         },
-        body: body,
+        body: formData,
         signal: abortSignal
     }).then((res) => {
         return res

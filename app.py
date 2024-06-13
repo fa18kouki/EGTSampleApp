@@ -391,8 +391,6 @@ def prepare_model_args(request_body):
                         "embedding_dependency"
                     ]["authentication"][field] = "*****"
 
-    logging.debug(f"REQUEST BODY: {json.dumps(model_args_clean, indent=4)}")
-
     return model_args
 
 
@@ -417,14 +415,15 @@ async def complete_chat_request(request_body):
 
 
 async def stream_chat_request(request_body):
+    logging.debug("RequestBody: ", request_body.get("messages"))
     response = await send_chat_request(request_body)
     file = request_body.get("file", None)
     if file:
+        print("File found")
         with open(f'usr/{file.filename}', 'wb') as f:
             f.write(file.read())
-    print("File: ", file)
     history_metadata = request_body.get("history_metadata", {})
-    print("History Metadata: ", history_metadata)
+    logging.debug("History Metadata: ", history_metadata)
 
     async def generate():
         async for completionChunk in response:
@@ -434,6 +433,7 @@ async def stream_chat_request(request_body):
 
 
 async def conversation_internal(request_body):
+    logging.debug("RequestBody: ", request_body)
     try:
         if SHOULD_STREAM:
             result = await stream_chat_request(request_body)
@@ -454,21 +454,31 @@ async def conversation_internal(request_body):
         else:
             return jsonify({"error": str(ex)}), 500
 
-# 会話エンドポイントのルートを定義
-
-
 @bp.route("/conversation", methods=["POST"])
 async def conversation():
-    # リクエストがJSON形式であることを確認
-    if not request.is_json:
-        return jsonify({"error": "request must be json"}), 415
+    if 'file' not in await request.files:
+        return jsonify({"error": "No file part"}), 400
 
-    # リクエストのJSONデータを取得
-    request_json = await request.get_json()
-    result = await stream_chat_request(request_json)
-    print("Result: ", result)
+    file = await request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "No selected file"}), 400
+
+    # ファイルを保存する処理をここに追加
+    file.save(os.path.join('/path/to/save', file.filename))
+
+    # その他のデータを処理
+    request_json = await request.form['messages']
+    messages = json.loads(request_json)
+    gptModel = await request.form['gptModel']
+
+    # チャットリクエストを処理
+    result = await stream_chat_request({
+        "messages": messages,
+        "gptModel": gptModel,
+        "file": file
+    })
+
     response = await make_response(format_as_ndjson(result))
-    print("Response: ", response)
     response.timeout = None
     response.mimetype = "application/json-lines"
     return response
@@ -499,7 +509,7 @@ async def add_conversation():
     # check request for conversation_id
     request_json = await request.get_json()
     conversation_id = request_json.get("conversation_id", None)
-
+    logging.debug(f"Request_json: {request_json}")
     try:
         # make sure cosmos is configured
         cosmos_conversation_client = init_conversation_cosmosdb_client()
@@ -519,7 +529,16 @@ async def add_conversation():
 
         # Format the incoming message object in the "chat/completions" messages format
         # then write it to the conversation history in cosmos
+        logging.debug(f"Received request_json: {request_json}")
         messages = request_json["messages"]
+        gptModel = request_json["gptModel"]
+        if request_json["file"]:
+            file = request_json["file"]
+            if file:
+                file.save(os.path.join('/path/to/save', file.filename))
+        else:
+            file = None
+        
         token = request_json.get("token", 0)
         if len(messages) > 0 and messages[-1]["role"] == "user":
             createdMessageValue = await cosmos_conversation_client.create_message(

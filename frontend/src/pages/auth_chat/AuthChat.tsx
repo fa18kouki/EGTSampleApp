@@ -447,7 +447,6 @@ const AuthChat = () => {
       };
       setMessages(request.messages);
     }
-    console.log("Request: ", request);
     let result = {} as ChatResponse;
     try {
       const idToken = user ? await user.getIdToken() : "";
