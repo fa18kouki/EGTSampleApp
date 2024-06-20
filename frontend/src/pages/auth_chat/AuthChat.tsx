@@ -13,6 +13,7 @@ import {
   Stack,
   Panel,
   DefaultButton,
+  Spinner
 } from "@fluentui/react";
 import {
   SquareRegular,
@@ -20,6 +21,7 @@ import {
   ErrorCircleRegular,
   PanelLeftTextRegular,
   PanelLeftRegular,
+  ChevronDoubleDownFilled,
 } from "@fluentui/react-icons";
 import {
   //Dropdown,
@@ -58,7 +60,7 @@ import {
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { ChatHistoryPanel } from "../../components/ChatHistory/ChatHistoryPanel";
-import { Dropdown } from "../../components/Dropdown";
+import { LLMDropdown, UserDropdown } from "../../components/Dropdown";
 import { AppStateContext } from "../../state/AppProvider";
 import { useBoolean } from "@fluentui/react-hooks";
 import { SettingsButton } from "../../components/SettingsButton";
@@ -68,11 +70,7 @@ import fv_text3_black from "../../assets/fv_text3_black.png";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import { auth } from "../../../FirebaseConfig";
 import { useNavigate, Navigate } from "react-router-dom";
-import {
-  ArrowExportLtrFilled,
-  ArrowExportRtlFilled,
-} from "@fluentui/react-icons";
-
+import { ClipLoader } from "react-spinners";
 const enum messageStatus {
   NotRunning = "Not Running",
   Processing = "Processing",
@@ -249,7 +247,7 @@ const AuthChat = () => {
 
   const makeApiRequestWithoutCosmosDB = async (
     question: string,
-    file?: null | File,
+    file?: null | File[],
     conversationId?: string
   ) => {
     setIsLoading(true);
@@ -399,7 +397,7 @@ const AuthChat = () => {
 
   const makeApiRequestWithCosmosDB = async (
     question: string,
-    file?: null | File,
+    file?: null | File[],
     conversationId?: string
   ) => {
     setIsLoading(true);
@@ -833,20 +831,13 @@ const AuthChat = () => {
         ChatHistoryLoadingState.Loading
     );
   };
-
   return (
     <>
       {!loading && (
         <>
-          {(
-            /*
-          !user ? (
-            <Navigate to={`/login/`} />
-            */
-           true
-          ) && (
-            <div className={styles.container} role="main">
-              <Stack horizontal className={styles.chatRoot}>
+          {user && (
+            <div className="flex flex-col gap-5 flex-1" role="main">
+              <Stack horizontal className="flex flex-1 mt-0 mb-5 mx-5 gap-1">
                 {appStateContext?.state.isChatHistoryOpen &&
                   appStateContext?.state.isCosmosDBAvailable?.status !==
                     CosmosDBStatus.NotConfigured && (
@@ -857,71 +848,93 @@ const AuthChat = () => {
                       setActiveCitation={setActiveCitation}
                     />
                   )}
-                <div className={styles.chatContainer}>
-                  <div className={styles.commandsContainer}>
+                <div className="flex flex-col items-center flex-1 bg-gradient-to-b from-white to-gray-400 shadow-md rounded-lg overflow-y-auto max-h-[calc(100vh-100px)]">
+                  <div className="flex justify-end items-start">
                     <Stack horizontal horizontalAlign="space-between">
                       <Stack horizontal>
                         {appStateContext?.state.isCosmosDBAvailable?.status !==
                           CosmosDBStatus.NotConfigured && (
                           <>
                             {appStateContext?.state.isChatHistoryOpen ? (
-                              <Button>
-                                <PanelLeftRegular
-                                  className={styles.historyArrow}
-                                  onClick={handleHistoryClick}
-                                />
+                              <Button
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor =
+                                    "#f0f0f0";
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor =
+                                    "transparent";
+                                }}
+                                onClick={handleHistoryClick}
+                                style={{
+                                  transition: "background-color 0.3s ease",
+                                  borderRadius: "8px",
+                                  padding: "4px",
+                                }}
+                              >
+                                <PanelLeftRegular className="w-10 h-9 text-gray-700 float-right" />
                               </Button>
                             ) : (
-                              <Button>
-                                <PanelLeftTextRegular
-                                  className={styles.historyArrow}
-                                  onClick={handleHistoryClick}
-                                />
+                              <Button
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor =
+                                    "#f0f0f0";
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor =
+                                    "transparent";
+                                }}
+                                onClick={handleHistoryClick}
+                                style={{
+                                  transition: "background-color 0.3s ease",
+                                  borderRadius: "8px",
+                                  padding: "4px",
+                                }}
+                              >
+                                <PanelLeftTextRegular className="w-10 h-9 text-gray-700 float-right" />
                               </Button>
                             )}
                           </>
                         )}
                       </Stack>
-                      <Dropdown onItemSelect={onItemSelect} />
+                      <LLMDropdown onItemSelect={onItemSelect} />
                     </Stack>
                   </div>
-                  {!messages || messages.length < 1 ? (
-                    <Stack className={styles.chatEmptyState}>
-                      <img
-                        src={fv_text1_black}
-                        className={styles.chatIcon}
-                        aria-hidden="true"
+                  {appStateContext?.state.chatHistoryLoadingState ===
+                  ChatHistoryLoadingState.Loading ? (
+                    <div className="flex justify-center items-center h-full">
+                      <Spinner
+                        className="self-start h-20 w-20 mr-1.25"
                       />
-                      <img
-                        src={fv_text2_black}
-                        className={styles.chatIcon}
+                      <span className="text-lg font-medium mt-2">履歴を読み込んでいます...</span>
+                    </div>
+                  ) : !messages || messages.length < 1 ? (
+                    <Stack className="flex-grow flex flex-col justify-center items-center">
+                      <span
+                        className="animate-fadeIn text-6xl font-serif"
                         aria-hidden="true"
-                      />
-                      <img
-                        src={fv_text3_black}
-                        className={styles.chatIcon}
-                        aria-hidden="true"
-                      />
+                      >
+                        こんにちは、{user.displayName}さん
+                        <br />
+                        本日はいかがいたしましょうか？
+                      </span>
                     </Stack>
                   ) : (
                     <div
-                      className={styles.chatMessageStream}
+                      className="flex-grow max-w-[60%] w-full overflow-y-auto px-6 flex flex-col mt-6"
                       style={{ marginBottom: isLoading ? "40px" : "0px" }}
                       role="log"
                     >
                       {messages.map((answer, index) => (
                         <>
                           {answer.role === "user" ? (
-                            <div
-                              className={styles.chatMessageUser}
-                              tabIndex={0}
-                            >
-                              <div className={styles.chatMessageUserMessage}>
+                            <div className="flex justify-end mb-3" tabIndex={0}>
+                              <div className="flex p-5 bg-gray-200 rounded-lg shadow-md text-gray-800 text-sm leading-6 max-w-[80%] whitespace-pre-wrap break-words font-sans">
                                 {answer.content}
                               </div>
                             </div>
                           ) : answer.role === "assistant" ? (
-                            <div className={styles.chatMessageGpt}>
+                            <div className="mb-3 max-w-[80%] flex">
                               <Answer
                                 answer={{
                                   answer: answer.content,
@@ -935,18 +948,18 @@ const AuthChat = () => {
                               />
                             </div>
                           ) : answer.role === ERROR ? (
-                            <div className={styles.chatMessageError}>
+                            <div className="p-5 rounded-lg shadow-md text-gray-800 text-sm leading-6 max-w-[800px] mb-3 border border-red-600">
                               <Stack
                                 horizontal
-                                className={styles.chatMessageErrorContent}
+                                className="font-sans text-sm leading-6 whitespace-pre-wrap break-words gap-3 items-center"
                               >
                                 <ErrorCircleRegular
-                                  className={styles.errorIcon}
+                                  className="text-red-600"
                                   style={{ color: "rgba(182, 52, 67, 1)" }}
                                 />
                                 <span>Error</span>
                               </Stack>
-                              <span className={styles.chatMessageErrorContent}>
+                              <span className="font-sans text-sm leading-6 whitespace-pre-wrap break-words gap-3 items-center">
                                 {answer.content}
                               </span>
                             </div>
@@ -955,7 +968,7 @@ const AuthChat = () => {
                       ))}
                       {showLoadingMessage && (
                         <>
-                          <div className={styles.chatMessageGpt}>
+                          <div className="mb-3 max-w-[80%] flex">
                             <Answer
                               answer={{
                                 answer: "Generating answer...",
@@ -969,12 +982,14 @@ const AuthChat = () => {
                       <div ref={chatMessageStreamEnd} />
                     </div>
                   )}
-
-                  <Stack horizontal className={styles.chatInput}>
+                  <Stack
+                    horizontal
+                    className="sticky flex-0 px-6 w-[calc(100%-100px)] max-w-[60%] mb-12 mt-2"
+                  >
                     {isLoading && (
                       <Stack
                         horizontal
-                        className={styles.stopGeneratingContainer}
+                        className="box-border flex flex-row justify-center items-center p-1.5 gap-1 absolute w-[161px] h-[32px] left-[calc(50%-161px/2+25.8px)] bottom-[116px] border border-gray-300 rounded-lg"
                         role="button"
                         aria-label="Stop generating"
                         tabIndex={0}
@@ -986,88 +1001,17 @@ const AuthChat = () => {
                         }
                       >
                         <SquareRegular
-                          className={styles.stopGeneratingIcon}
+                          className="w-3.5 h-3.5 text-gray-700"
                           aria-hidden="true"
                         />
                         <span
-                          className={styles.stopGeneratingText}
+                          className="w-[103px] h-[20px] font-semibold text-sm leading-5 text-gray-800 flex-none order-0 flex-grow-0"
                           aria-hidden="true"
                         >
                           Stop generating
                         </span>
                       </Stack>
                     )}
-                    {/*}
-                    <Stack>
-                      
-                      {appStateContext?.state.isCosmosDBAvailable?.status !==
-                        CosmosDBStatus.NotConfigured && (
-                        <CommandBarButton
-                          role="button"
-                          styles={{
-                            icon: {
-                              color: "#FFFFFF",
-                            },
-                            iconDisabled: {
-                              color: "#BDBDBD !important",
-                            },
-                            root: {
-                              color: "#FFFFF",
-                              background: "#808080", // 灰色の背景色に設定
-                            },
-                            rootDisabled: {
-                              background: "#F0F0F0",
-                            },
-                          }}
-                          className={styles.newChatIcon}
-                          iconProps={{ iconName: "Add" }}
-                          onClick={newChat}
-                          disabled={disabledButton()}
-                          aria-label="start a new chat button"
-                        />
-                      )}
-                      <CommandBarButton
-                        role="button"
-                        styles={{
-                          icon: {
-                            color: "#FFFFFF",
-                          },
-                          iconDisabled: {
-                            color: "#BDBDBD !important",
-                          },
-                          root: {
-                            color: "#FFFFF",
-                            background:
-                              "radial-gradient(109.81% 107.82% at 100.1% 90.19%, #FFFFFF 33.63%, #000000 100%)",
-                          },
-                          rootDisabled: {
-                            background: "#F0F0F0",
-                          },
-                        }}
-                        className={
-                          appStateContext?.state.isCosmosDBAvailable?.status !==
-                          CosmosDBStatus.NotConfigured
-                            ? styles.clearChatBroom
-                            : styles.clearChatBroomNoCosmos
-                        }
-                        iconProps={{ iconName: "Broom" }}
-                        onClick={
-                          appStateContext?.state.isCosmosDBAvailable?.status !==
-                          CosmosDBStatus.NotConfigured
-                            ? clearChat
-                            : newChat
-                        }
-                        disabled={disabledButton()}
-                        aria-label="clear chat button"
-                      />
-                      <Dialog
-                        hidden={hideErrorDialog}
-                        onDismiss={handleErrorDialogClose}
-                        dialogContentProps={errorDialogContentProps}
-                        modalProps={modalProps}
-                      ></Dialog>
-                    </Stack>
-                      */}
                     <QuestionInput
                       clearOnSend
                       placeholder="AIにメッセージを送信する"
@@ -1089,13 +1033,12 @@ const AuthChat = () => {
                     />
                   </Stack>
                 </div>
-                {/* Citation Panel */}
                 {messages &&
                   messages.length > 0 &&
                   isCitationPanelOpen &&
                   activeCitation && (
                     <Stack.Item
-                      className={styles.citationPanel}
+                      className="flex flex-col items-start p-4 gap-2 bg-white shadow-md rounded-lg flex-auto order-0 self-stretch flex-grow-[0.3] max-w-[30%] overflow-y-scroll max-h-[calc(100vh-100px)]"
                       tabIndex={0}
                       role="tabpanel"
                       aria-label="Citations Panel"
@@ -1103,13 +1046,13 @@ const AuthChat = () => {
                       <Stack
                         aria-label="Citations Panel Header Container"
                         horizontal
-                        className={styles.citationPanelHeaderContainer}
+                        className="w-full"
                         horizontalAlign="space-between"
                         verticalAlign="center"
                       >
                         <span
                           aria-label="Citations"
-                          className={styles.citationPanelHeader}
+                          className="font-semibold text-lg leading-6 text-black flex-none order-0 flex-grow-0"
                         >
                           Citations
                         </span>
@@ -1120,7 +1063,7 @@ const AuthChat = () => {
                         />
                       </Stack>
                       <h5
-                        className={styles.citationPanelTitle}
+                        className="font-semibold text-base leading-6 text-gray-800 mt-3 mb-3"
                         tabIndex={0}
                         title={
                           activeCitation.url &&
@@ -1135,7 +1078,7 @@ const AuthChat = () => {
                       <div tabIndex={0}>
                         <ReactMarkdown
                           linkTarget="_blank"
-                          className={styles.citationPanelContent}
+                          className="font-normal text-sm leading-5 text-black flex-none order-1 self-stretch flex-grow-0"
                           children={DOMPurify.sanitize(activeCitation.content, {
                             ALLOWED_TAGS: XSSAllowTags,
                           })}
@@ -1145,11 +1088,6 @@ const AuthChat = () => {
                       </div>
                     </Stack.Item>
                   )}
-                {/*
-                {appStateContext?.state.isChatHistoryOpen &&
-                  appStateContext?.state.isCosmosDBAvailable?.status !==
-                    CosmosDBStatus.NotConfigured && <ChatHistoryPanel />}
-                */}
               </Stack>
             </div>
           )}

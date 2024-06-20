@@ -67,17 +67,32 @@ export type ChatResponse = {
 export type ConversationRequest = {
     messages: ChatMessage[];
     gptModel: string;
-    file?: File;
+    file?: File[];
 };
 
 export type UserInfo = {
-    access_token: string;
-    expires_on: string;
-    id_token: string;
-    provider_name: string;
-    user_claims: any[];
-    user_id: string;
-};
+    createdAt: string;
+    displayName: string;
+    email: string;
+    emailVerified: boolean;
+    lastLoginAt: string;
+    lastRefreshAt: string;
+    localId: string;
+    passwordHash: string;
+    passwordUpdatedAt: number;
+    providerUserInfo: ProviderUserInfo[];
+    salt: string;
+    validSince: string;
+    version: number;
+}
+
+export type ProviderUserInfo = {
+    displayName: string;
+    email: string;
+    federatedId: string;
+    providerId: string;
+    rawId: string;
+}
 
 export enum CosmosDBStatus {
     NotConfigured = "CosmosDB is not configured",

@@ -1,6 +1,4 @@
-import React, { createContext, ReactNode, useEffect ,
-  useReducer } from 'react'
-
+import React, { createContext, ReactNode, useEffect, useReducer } from 'react'
 import {
   ChatHistoryLoadingState,
   Conversation,
@@ -63,6 +61,28 @@ const initialState: AppState = {
   user: null
 }
 
+const loadState = (): AppState => {
+  try {
+    const serializedState = sessionStorage.getItem('appState');
+    if (serializedState === null) {
+      return initialState;
+    }
+    return JSON.parse(serializedState);
+  } catch (err) {
+    console.error('Could not load state', err);
+    return initialState;
+  }
+}
+
+const saveState = (state: AppState) => {
+  try {
+    const serializedState = JSON.stringify(state);
+    sessionStorage.setItem('appState', serializedState);
+  } catch (err) {
+    console.error('Could not save state', err);
+  }
+}
+
 export const AppStateContext = createContext<
   | {
       state: AppState
@@ -76,24 +96,23 @@ type AppStateProviderProps = {
 }
 
 export const AppStateProvider: React.FC<AppStateProviderProps> = ({ children }) => {
-  const [state, dispatch] = useReducer(appStateReducer, initialState)
+  const [state, dispatch] = useReducer(appStateReducer, loadState())
 
   useEffect(() => {
-    
+    saveState(state);
+  }, [state]);
+
+  useEffect(() => {
     onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
         dispatch({ type: 'UPDATE_USER', payload: currentUser });
       } else {
         dispatch({ type: 'UPDATE_USER', payload: null });
       }
-      
     });
-  }, [state.user]);
+  }, []);
 
   useEffect(() => {
-    
-    // Check for cosmosdb config and fetch initial data here
-    
     const fetchChatHistory = async (offset = 0): Promise<Conversation[] | null> => {
       const currentUser = auth.currentUser;
       if (!currentUser) {
@@ -113,6 +132,9 @@ export const AppStateProvider: React.FC<AppStateProviderProps> = ({ children }) 
     }
 
     const getHistoryEnsure = async () => {
+      if (state.chatHistoryLoadingState === ChatHistoryLoadingState.Success) {
+        return;
+      }
       dispatch({ type: 'UPDATE_CHAT_HISTORY_LOADING_STATE', payload: ChatHistoryLoadingState.Loading })
       historyEnsure()
         .then(response => {
@@ -148,7 +170,7 @@ export const AppStateProvider: React.FC<AppStateProviderProps> = ({ children }) 
         })
     }
     getHistoryEnsure()
-  }, [])
+  }, [state.chatHistoryLoadingState])
 
   useEffect(() => {
     const getFrontendSettings = async () => {

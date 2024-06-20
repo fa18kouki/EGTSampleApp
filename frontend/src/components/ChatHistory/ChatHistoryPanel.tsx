@@ -17,7 +17,6 @@ import {
 } from "@fluentui/react";
 import { useBoolean } from "@fluentui/react-hooks";
 import { Link } from "react-router-dom";
-import styles from "./ChatHistoryPanel.module.css";
 import { useContext } from "react";
 import { AppStateContext } from "../../state/AppProvider";
 import React from "react";
@@ -28,7 +27,6 @@ import {
   ChatMessage,
   Citation,
 } from "../../api";
-import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import { auth } from "../../../FirebaseConfig.js";
 
 interface ChatHistoryPanelProps {
@@ -157,7 +155,7 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
 
   return (
     <section
-      className="max-h-[calc(100vh-100px)] w-[300px]"
+      className="max-h-[calc(100vh-100px)] w-[300px] bg-white shadow-lg rounded-lg"
       data-is-scrollable
       aria-label={"チャット履歴パネル"}
     >
@@ -233,9 +231,8 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
                             {appStateContext?.state.isCosmosDBAvailable?.status}
                           </span>
                         )}
-                        {!appStateContext?.state.isCosmosDBAvailable?.status && (
-                          <span>チャット履歴の読み込みエラー</span>
-                        )}
+                        {!appStateContext?.state.isCosmosDBAvailable
+                          ?.status && <span>チャット履歴の読み込みエラー</span>}
                       </Text>
                     </StackItem>
                     <StackItem>

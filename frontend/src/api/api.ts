@@ -1,11 +1,24 @@
-import { UserInfo, ConversationRequest, Conversation, ChatMessage, CosmosDBHealth, CosmosDBStatus } from "./models";
+import { UserInfo,ProviderUserInfo, ConversationRequest, Conversation, ChatMessage, CosmosDBHealth, CosmosDBStatus } from "./models";
 import { chatHistorySampleData } from "../constants/chatHistory";
 
-export async function GetUserInfo(): Promise<boolean> {
-    const response = await fetch("/auth/me", {
+export async function getUserInfo(): Promise<UserInfo[]> {
+    const response = await fetch('/auth/me',{
+        method: 'GET',
+    });
+    if (!response.ok) {
+        console.log("No identity provider found. Access to chat will be blocked.")
+        return [];
+    }
+
+    const payload = await response.json();
+    return payload;
+}
+
+export async function getProviderUserInfo(): Promise<ProviderUserInfo> {
+    const response = await fetch("/auth/provider_user_info", {
         method: "GET",
     });
-    return response.ok;
+    return response.json();
 } 
 
 export async function Logout(): Promise<boolean> {
@@ -20,7 +33,9 @@ export async function conversationApi(options: ConversationRequest, abortSignal:
     formData.append("messages", JSON.stringify(options.messages));
     formData.append("gptModel", options.gptModel);
     if (options.file) {
-        formData.append("file", options.file);
+        options.file.forEach((file, index) => {
+            formData.append(`file${index}`, file);
+        });
     }
     console.log("formData: ", formData)
     const response = await fetch("/conversation", {
@@ -30,19 +45,6 @@ export async function conversationApi(options: ConversationRequest, abortSignal:
     });
 
     return response;
-}
-
-export async function getUserInfo(): Promise<UserInfo[]> {
-    const response = await fetch('/auth/me',{
-        method: 'GET',
-    });
-    if (!response.ok) {
-        console.log("No identity provider found. Access to chat will be blocked.")
-        return [];
-    }
-
-    const payload = await response.json();
-    return payload;
 }
 
 export const fetchChatHistoryInit = (): Conversation[] | null => {
@@ -133,14 +135,13 @@ export const historyGenerate = async (options: ConversationRequest, abortSignal:
     formData.append("messages", JSON.stringify(options.messages));
     formData.append("gptModel", options.gptModel);
     if (options.file) {
-        formData.append("file", options.file);
+        options.file.forEach((file, index) => {
+            formData.append(`file${index}`, file);
+        });
     }
     if(convId){
         formData.append("conversation_id", convId)
     }
-    console.log("messages: ", formData.get("messages"))
-    console.log("gptModel: ", formData.get("gptModel"))
-    console.log("file: ", formData.get("file"))
     const response = await fetch("/history/generate", {
         method: "POST",
         headers: {

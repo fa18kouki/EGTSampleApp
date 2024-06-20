@@ -67,13 +67,15 @@ const ChatHistoryList: React.FC<ChatHistoryListProps> = () => {
     if(chatHistory && chatHistory.length > 0){
         groupedChatHistory = groupByMonth(chatHistory);
     }else{
-        return <Stack horizontal horizontalAlign='center' verticalAlign='center' style={{ width: "100%", marginTop: 10 }}>
-            <StackItem>
-                <Text style={{ alignSelf: 'center', fontWeight: '400', fontSize: 14 }}>
-                    <span>チャット履歴がありません</span>
-                </Text>
-            </StackItem>
-        </Stack>
+        return (
+            <div className="flex justify-center items-center w-full mt-2.5">
+                <div>
+                    <p className="self-center font-normal text-base">
+                        <span>チャット履歴がありません</span>
+                    </p>
+                </div>
+            </div>
+        );
     }
     
     return (

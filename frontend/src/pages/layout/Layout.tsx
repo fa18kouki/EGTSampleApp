@@ -1,5 +1,4 @@
 import { Outlet, Link, NavLink, useNavigate, Navigate } from "react-router-dom";
-import styles from "./Layout.module.css";
 import Contoso from "../../assets/Contoso.svg";
 import { CopyRegular } from "@fluentui/react-icons";
 import { Dialog, Stack, TextField } from "@fluentui/react";
@@ -7,10 +6,12 @@ import React, { useContext, useEffect, useState } from "react";
 import { auth } from "../../../FirebaseConfig";
 import { HistoryButton, ShareButton } from "../../components/common/Button";
 import { AppStateContext } from "../../state/AppProvider";
-import { CosmosDBStatus, Logout, GetUserInfo } from "../../api";
+import { CosmosDBStatus, Logout, getUserInfo } from "../../api";
 import EGTLogo from "../../assets/EGTLogo.svg";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import { NavigationFilled } from '@fluentui/react-icons';
+import { UserDropdown } from "../../components/Dropdown/UserDropdown";
+
 
 const Layout = () => {
   const [isSharePanelOpen, setIsSharePanelOpen] = useState<boolean>(false);
@@ -30,7 +31,7 @@ const Layout = () => {
   };
 
   const checkAuthentication = async () => {
-    const isAuthenticated = await GetUserInfo();
+    const isAuthenticated = await getUserInfo();
     return isAuthenticated ? true : false;
   };
 
@@ -57,10 +58,17 @@ const Layout = () => {
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
+    const checkAuth = async () => {
+      const authenticated = await checkAuthentication();
+      setIsAuthenticated(authenticated);
+    };
+
     onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setLoading(false);
     });
+
+    checkAuth();
   }, []);
 
   const navigate = useNavigate();
@@ -71,21 +79,13 @@ const Layout = () => {
   };
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const authenticated = await checkAuthentication();
-      setIsAuthenticated(authenticated);
-    };
-    checkAuth();
-  }, []);
-
-  useEffect(() => {
     if (copyClicked) {
       setCopyText("Copied URL");
     }
   }, [copyClicked]);
 
   useEffect(() => {}, [appStateContext?.state.isCosmosDBAvailable.status]);
-
+/*
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 480) {
@@ -104,63 +104,52 @@ const Layout = () => {
 
     return () => window.removeEventListener("resize", handleResize); 
   }, []);
-
+*/ 
   return (
-    <div className={styles.layout}>
-      <header className={styles.header} role={"banner"}>
-        <div className={styles.headerContainer}>
-          <div className={styles.headerContainer}>
-            <div className={styles.headerRight}
-              role="button"
-              arai-label="Open Navigation"
-              onClick={handleHistoryClick}
-            >
-              
-            </div>
-            <Link to="/" className={styles.headerTitleLeft}>
-              <img src={EGTLogo} className={styles.headerLogo} alt="EGT Logo" />
-              {/*  <h3 className={styles.headerTitle}>EGT-GPT</h3> */}
-            </Link>
-            <nav>
-              <ul className={styles.headerNavList}>
-                <li className={styles.headerNavList}>
-                  <NavLink
-                    to="/"
-                    className={({ isActive }) =>
-                      isActive
-                        ? styles.headerNavPageLinkActive
-                        : styles.headerNavPageLink
-                    }
-                  >
-                    チャット
-                  </NavLink>
-                </li>
-                <li className={styles.headerNavLeftMargin}>
-                  <NavLink
-                    to="/prompts"
-                    className={({ isActive }) =>
-                      isActive
-                        ? styles.headerNavPageLinkActive
-                        : styles.headerNavPageLink
-                    }
-                  >
-                    プロンプト
-                  </NavLink>
-                </li>
-                <li className={styles.headerNavLeftMargin}>
-                  <NavLink
-                    to="/mypage"
-                    className={({ isActive }) =>
-                      isActive
-                        ? styles.headerNavPageLinkActive
-                        : styles.headerNavPageLink
-                    }
-                  >
-                    {user?.email}
-                  </NavLink>
-                </li>
-              </ul>
-            </nav>
+    <div className="flex flex-col h-full">
+      <header className="bg-gray-900 text-gray-200 h-16 mb-5" role={"banner"}>
+        <div className="flex items-center justify-between mx-3 h-full">
+          <Link to="/" className="ml-3 font-semibold text-left">
+            <img src={EGTLogo} className="h-10" alt="EGT Logo" />
+          </Link>
+          <nav className="flex-grow">
+            <ul className="flex justify-center list-none h-full items-center">
+              <li className="ml-5">
+                <NavLink
+                  to="/"
+                  className={({ isActive }) =>
+                    isActive
+                      ? "opacity-100 text-gray-200 no-underline"
+                      : "opacity-40 text-gray-200 no-underline transition-opacity duration-500 ease-in-out hover:text-white"
+                  }
+                >
+                  チャット
+                </NavLink>
+              </li>
+              <li className="ml-5">
+                <NavLink
+                  to="/prompts"
+                  className={({ isActive }) =>
+                    isActive
+                      ? "opacity-100 text-gray-200 no-underline"
+                      : "opacity-40 text-gray-200 no-underline transition-opacity duration-500 ease-in-out hover:text-white"
+                  }
+                >
+                  プロンプト
+                </NavLink>
+              </li>
+            </ul>
+          </nav>
+          <div className="mr-3 relative">
+            <UserDropdown
+              onItemSelect={(item) => {
+                if (item.key === "logout") {
+                  logout();
+                } else if (item.key === "delete-account") {
+                  // アカウント削除のロジックをここに追加
+                }
+              }}
+            />
           </div>
         </div>
       </header>

@@ -9,9 +9,8 @@ import {
   Text,
 } from "@fluentui/react";
 import DOMPurify from "dompurify";
+import { Clipboard20Filled } from "@fluentui/react-icons"; // 追加
 import { AppStateContext } from "../../state/AppProvider";
-
-import styles from "./Answer.module.css";
 
 import {
   AskResponse,
@@ -54,6 +53,7 @@ export const Answer = ({ answer, onCitationClicked }: Props) => {
   const [feedbackState, setFeedbackState] = useState(
     initializeAnswerFeedback(answer)
   );
+  const [isCopied, setIsCopied] = useState(false);
   const [isFeedbackDialogOpen, setIsFeedbackDialogOpen] = useState(false);
   const [showReportInappropriateFeedback, setShowReportInappropriateFeedback] =
     useState(false);
@@ -66,7 +66,12 @@ export const Answer = ({ answer, onCitationClicked }: Props) => {
     appStateContext?.state.isCosmosDBAvailable?.cosmosDB;
   const SANITIZE_ANSWER =
     appStateContext?.state.frontendSettings?.sanitize_answer;
-
+  const onCopyToClipboard = () => {
+    navigator.clipboard.writeText(parsedAnswer.markdownFormatText).then(() => {
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000); // 2秒後に吹き出しを非表示にする
+    });
+  };
   const handleChevronClick = () => {
     setChevronIsExpanded(!chevronIsExpanded);
     toggleIsRefAccordionOpen();
@@ -297,40 +302,64 @@ export const Answer = ({ answer, onCitationClicked }: Props) => {
       </>
     );
   };
-  
+
   const components = {
-    code({node, ...props}: {node: any, [key: string]: any}) {
-        let language;
-        if (props.className) {
-            const match = props.className.match(/language-(\w+)/);
-            language = match ? match[1] : undefined;
-        }
-        const codeString = node.children[0].value ?? '';
-        return (
-            <SyntaxHighlighter style={nord} language={language} PreTag="div" {...props}>
-                {codeString}
-            </SyntaxHighlighter>
-        );
+    code({ node, ...props }: { node: any; [key: string]: any }) {
+      let language;
+      if (props.className) {
+        const match = props.className.match(/language-(\w+)/);
+        language = match ? match[1] : undefined;
+      }
+      const codeString = node.children[0].value ?? "";
+      return (
+        <SyntaxHighlighter
+          style={nord}
+          language={language}
+          PreTag="div"
+          {...props}
+        >
+          {codeString}
+        </SyntaxHighlighter>
+      );
     },
-    table({node, ...props}: {node: any, [key: string]: any}) {
-        return (
-            <table style={{ borderCollapse: 'collapse', width: '100%', borderRadius: '8px', overflow: 'hidden' }} {...props} />
-        );
+    table({ node, ...props }: { node: any; [key: string]: any }) {
+      return (
+        <table
+          style={{
+            borderCollapse: "collapse",
+            width: "100%",
+            borderRadius: "8px",
+            overflow: "hidden",
+          }}
+          {...props}
+        />
+      );
     },
-    th({node, ...props}: {node: any, [key: string]: any}) {
-        return (
-            <th style={{ border: '1px solid #ddd', padding: '8px', backgroundColor: '#f2f2f2', borderRadius: '8px 8px 0 0' }} {...props} />
-        );
+    th({ node, ...props }: { node: any; [key: string]: any }) {
+      return (
+        <th
+          style={{
+            border: "1px solid #ddd",
+            padding: "8px",
+            backgroundColor: "#f2f2f2",
+            borderRadius: "8px 8px 0 0",
+          }}
+          {...props}
+        />
+      );
     },
-    td({node, ...props}: {node: any, [key: string]: any}) {
-        return (
-            <td style={{ border: '1px solid #ddd', padding: '8px' }} {...props} />
-        );
+    td({ node, ...props }: { node: any; [key: string]: any }) {
+      return (
+        <td style={{ border: "1px solid #ddd", padding: "8px" }} {...props} />
+      );
     },
-};
+  };
   return (
     <>
-      <Stack className={styles.answerContainer} tabIndex={0}>
+      <Stack
+        className="flex flex-col items-start p-2 gap-1 bg-white shadow-md rounded-md"
+        tabIndex={0}
+      >
         <Stack.Item>
           <Stack horizontal grow>
             <Stack.Item grow>
@@ -344,11 +373,11 @@ export const Answer = ({ answer, onCitationClicked }: Props) => {
                       })
                     : parsedAnswer.markdownFormatText
                 }
-                className={styles.answerText}
+                className="text-base text-gray-800 m-3 whitespace-normal break-words max-w-2xl overflow-x-auto font-arial"
                 components={components}
               />
             </Stack.Item>
-            <Stack.Item className={styles.answerHeader}>
+            <Stack.Item className="relative">
               {FEEDBACK_ENABLED && answer.message_id !== undefined && (
                 <Stack horizontal horizontalAlign="space-between">
                   <ThumbLike20Filled
@@ -376,12 +405,29 @@ export const Answer = ({ answer, onCitationClicked }: Props) => {
                         : { color: "slategray", cursor: "pointer" }
                     }
                   />
+                  <div className="relative">
+                    {isCopied ? (
+                      <div className="absolute top-[-20px] right-0 bg-black text-white text-xs py-1 px-2 rounded transition-opacity duration-1000">
+                        Copied!
+                      </div>
+                    ) : (
+                      <Clipboard20Filled
+                        aria-hidden="false"
+                        aria-label="Copy to clipboard"
+                        onClick={onCopyToClipboard}
+                        style={{ color: "slategray", cursor: "pointer" }}
+                      />
+                    )}
+                  </div>
                 </Stack>
               )}
             </Stack.Item>
           </Stack>
         </Stack.Item>
-        <Stack horizontal className={styles.answerFooter}>
+        <Stack
+          horizontal
+          className="flex flex-row w-full box-border justify-between"
+        >
           {!!parsedAnswer.citations.length && (
             <Stack.Item
               onKeyDown={(e) =>
@@ -390,14 +436,14 @@ export const Answer = ({ answer, onCitationClicked }: Props) => {
                   : null
               }
             >
-              <Stack style={{ width: "100%" }}>
+              <Stack className="w-full">
                 <Stack
                   horizontal
                   horizontalAlign="start"
                   verticalAlign="center"
                 >
                   <Text
-                    className={styles.accordionTitle}
+                    className="mr-1 ml-2 text-sm text-gray-600 flex items-center cursor-pointer"
                     onClick={toggleIsRefAccordionOpen}
                     aria-label="Open references"
                     tabIndex={0}
@@ -410,7 +456,7 @@ export const Answer = ({ answer, onCitationClicked }: Props) => {
                     </span>
                   </Text>
                   <FontIcon
-                    className={styles.accordionIcon}
+                    className="text-gray-600 text-xs cursor-pointer"
                     onClick={handleChevronClick}
                     iconName={
                       chevronIsExpanded ? "ChevronDown" : "ChevronRight"
@@ -420,14 +466,14 @@ export const Answer = ({ answer, onCitationClicked }: Props) => {
               </Stack>
             </Stack.Item>
           )}
-          <Stack.Item className={styles.answerDisclaimerContainer}>
-            <span className={styles.answerDisclaimer}>
+          <Stack.Item className="flex justify-center">
+            <span className="text-xs text-gray-500 flex items-center text-center">
               AIが生成したものは間違っている可能性があります。
             </span>
           </Stack.Item>
         </Stack>
         {chevronIsExpanded && (
-          <div className={styles.citationWrapper}>
+          <div className="mt-2 flex flex-col max-h-36 gap-1">
             {parsedAnswer.citations.map((citation, idx) => {
               return (
                 <span
@@ -441,10 +487,12 @@ export const Answer = ({ answer, onCitationClicked }: Props) => {
                       ? onCitationClicked(citation)
                       : null
                   }
-                  className={styles.citationContainer}
+                  className="ml-2 text-xs font-semibold text-blue-700 flex flex-row items-center p-1 gap-1 border border-gray-300 rounded cursor-pointer hover:underline"
                   aria-label={createCitationFilepath(citation, idx)}
                 >
-                  <div className={styles.citation}>{idx}</div>
+                  <div className="box-border flex flex-col justify-center items-center w-3.5 h-3.5 border border-gray-300 rounded text-xs font-semibold text-gray-700 cursor-pointer">
+                    {idx}
+                  </div>
                   {createCitationFilepath(citation, idx, true)}
                 </span>
               );

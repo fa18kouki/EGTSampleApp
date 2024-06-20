@@ -13,7 +13,6 @@ from quart import (
     request,
     send_from_directory,
     render_template,
-    session,
     url_for,
     redirect,
 )
@@ -24,11 +23,17 @@ from azure.identity.aio import (
 from openai import AsyncOpenAI
 from openai import AsyncAzureOpenAI
 from backend.auth.auth_utils import (
+    get_userid,
     get_authenticated_user_details, 
     fetch_users,
     verify_email,
     set_custom_claims,
-    AuthError
+    AuthError,
+    confirm_password_reset,
+    handle_reset_password,
+    handle_recover_email,
+    handle_verify_email,
+    create_user_and_send_verification
 )
 from backend.history.cosmosdbservice import CosmosConversationClient
 from backend.prompt.cosmosdbservice import CosmosPromptClient
@@ -437,9 +442,7 @@ async def conversation_internal(request_body):
     try:
         if SHOULD_STREAM:
             result = await stream_chat_request(request_body)
-            print("Result: ", result)
             response = await make_response(format_as_ndjson(result))
-            print("Response: ", response)
             response.timeout = None
             response.mimetype = "application/json-lines"
             return response
@@ -453,6 +456,20 @@ async def conversation_internal(request_body):
             return jsonify({"error": str(ex)}), ex.status_code
         else:
             return jsonify({"error": str(ex)}), 500
+
+@bp.route("/frontend_settings", methods=["GET"])
+def get_frontend_settings():
+    try:
+        return jsonify(frontend_settings), 200
+    except KeyError as e:
+        logging.exception("KeyError in /frontend_settings")
+        return jsonify({"error": f"Key not found: {str(e)}"}), 400
+    except TypeError as e:
+        logging.exception("TypeError in /frontend_settings")
+        return jsonify({"error": f"Type error: {str(e)}"}), 400
+    except Exception as e:
+        logging.exception("Exception in /frontend_settings")
+        return jsonify({"error": "An unexpected error occurred"}), 500
 
 @bp.route("/conversation", methods=["POST"])
 async def conversation():
@@ -483,39 +500,23 @@ async def conversation():
     response.mimetype = "application/json-lines"
     return response
 
-@bp.route("/frontend_settings", methods=["GET"])
-def get_frontend_settings():
-    try:
-        return jsonify(frontend_settings), 200
-    except KeyError as e:
-        logging.exception("KeyError in /frontend_settings")
-        return jsonify({"error": f"Key not found: {str(e)}"}), 400
-    except TypeError as e:
-        logging.exception("TypeError in /frontend_settings")
-        return jsonify({"error": f"Type error: {str(e)}"}), 400
-    except Exception as e:
-        logging.exception("Exception in /frontend_settings")
-        return jsonify({"error": "An unexpected error occurred"}), 500
-
 ## Conversation History API ##
 
 @bp.route("/history/generate", methods=["POST"])
 async def add_conversation():
-    authenticated_user = get_authenticated_user_details(
-        request_headers=request.headers)
-    user_id = authenticated_user["user_principal_id"]
+    
+    user_id = get_userid(request_headers=request.headers)
     # check request for conversation_id
     try:
         form_data = await request.form
-        logging.info("フォームデータ: %s", form_data)
-        logging.info("メッセージ: %s", form_data.get('messages'))
-        logging.info("GPTモデル: %s", form_data.get('gptModel'))
-        # 非同期でファイルを取得
+        logging.info("form_data: %s", form_data)
+        logging.info("messages: %s", form_data.get('messages'))
+        logging.info("gptModel: %s", form_data.get('gptModel'))
         try:
             files = await request.files
             file = files.get('file')
-            logging.info("ファイル: %s", file)
-            logging.info("ファイルズ: %s", files)
+            logging.info("file: %s", file)
+            logging.info("files: %s", files)
         except Exception as e:
             logging.exception("Exception in /history/generate")
             return jsonify({"error": str(e)}), 500
@@ -567,7 +568,7 @@ async def add_conversation():
             raise Exception("No user message found")
 
         await cosmos_conversation_client.cosmosdb_client.close()
-
+        history_metadata["conversation_id"] = conversation_id
         request_body = {
             "messages": messages,
             "gptModel": gptModel,
@@ -583,9 +584,8 @@ async def add_conversation():
 
 @bp.route("/history/update", methods=["POST"])
 async def update_conversation():
-    authenticated_user = get_authenticated_user_details(
-        request_headers=request.headers)
-    user_id = authenticated_user["user_principal_id"]
+    
+    user_id = get_userid(request_headers=request.headers)
 
     # check request for conversation_id
     request_json = await request.get_json()
@@ -639,9 +639,8 @@ async def update_conversation():
 
 @bp.route("/history/message_feedback", methods=["POST"])
 async def update_message():
-    authenticated_user = get_authenticated_user_details(
-        request_headers=request.headers)
-    user_id = authenticated_user["user_principal_id"]
+    
+    user_id = get_userid(request_headers=request.headers)
     cosmos_conversation_client = init_conversation_cosmosdb_client()
 
     # check request for message_id
@@ -687,9 +686,8 @@ async def update_message():
 @bp.route("/history/delete", methods=["DELETE"])
 async def delete_conversation():
     # get the user id from the request headers
-    authenticated_user = get_authenticated_user_details(
-        request_headers=request.headers)
-    user_id = authenticated_user["user_principal_id"]
+    
+    user_id = get_userid(request_headers=request.headers)
 
     # check request for conversation_id
     request_json = await request.get_json()
@@ -734,9 +732,8 @@ async def delete_conversation():
 async def list_conversations():
     offset = request.args.get("offset", 0)
     logging.info("ヘッダー、offset: %s", (request.headers, offset))
-    authenticated_user = get_authenticated_user_details(
-        request_headers=request.headers)
-    user_id = authenticated_user["user_principal_id"]
+    
+    user_id = get_userid(request_headers=request.headers)
     logging.info("ユーザーID: %s", user_id)
     # make sure cosmos is configured
     cosmos_conversation_client = init_conversation_cosmosdb_client()
@@ -758,9 +755,8 @@ async def list_conversations():
 
 @bp.route("/history/read", methods=["POST"])
 async def get_conversation():
-    authenticated_user = get_authenticated_user_details(
-        request_headers=request.headers)
-    user_id = authenticated_user["user_principal_id"]
+    
+    user_id = get_userid(request_headers=request.headers)
     # check request for conversation_id
     request_json = await request.get_json()
     conversation_id = request_json.get("conversation_id", None)
@@ -811,9 +807,8 @@ async def get_conversation():
 
 @bp.route("/history/rename", methods=["POST"])
 async def rename_conversation():
-    authenticated_user = get_authenticated_user_details(
-        request_headers=request.headers)
-    user_id = authenticated_user["user_principal_id"]
+    
+    user_id = get_userid(request_headers=request.headers)
 
     # check request for conversation_id
     request_json = await request.get_json()
@@ -857,9 +852,8 @@ async def rename_conversation():
 @bp.route("/history/delete_all", methods=["DELETE"])
 async def delete_all_conversations():
     # get the user id from the request headers
-    authenticated_user = get_authenticated_user_details(
-        request_headers=request.headers)
-    user_id = authenticated_user["user_principal_id"]
+    
+    user_id = get_userid(request_headers=request.headers)
 
     # get conversations for user
     try:
@@ -902,9 +896,8 @@ async def delete_all_conversations():
 @bp.route("/history/clear", methods=["POST"])
 async def clear_messages():
     # get the user id from the request headers
-    authenticated_user = get_authenticated_user_details(
-        request_headers=request.headers)
-    user_id = authenticated_user["user_principal_id"]
+    
+    user_id = get_userid(request_headers=request.headers)
 
     # check request for conversation_id
     request_json = await request.get_json()
@@ -940,8 +933,8 @@ async def clear_messages():
 async def ensure_cosmos():
     if not AZURE_COSMOSDB_ACCOUNT:
         return jsonify({"error": "CosmosDBが構成されていません"}), 404
-
-    try:
+    
+    try:    
         cosmos_conversation_client = init_conversation_cosmosdb_client()
         success, err = await cosmos_conversation_client.ensure()
         if not cosmos_conversation_client or not success:
@@ -977,8 +970,6 @@ async def ensure_cosmos():
         else:
             return jsonify({"error": "CosmosDBが動作していません"}), 500
 ## Prompt API ##
-
-
 @bp.route("/prompt/get_prompts", methods=["GET"])
 async def get_prompts():
     try:
@@ -1024,7 +1015,7 @@ async def add_prompt():
         return jsonify({"error": str(e)}), 500
 
 ## Auth API ##
-@bp.route("/auth/verify_email/", methods=["POST"])
+@bp.route("/auth/verify", methods=["POST"])
 async def verify_user():
     try:
         await verify_email(request_headers=request.headers)
@@ -1037,11 +1028,39 @@ async def verify_user():
         return jsonify({"error": str(e)}), 500
 
 
+@bp.route('/usermgmt', methods=['GET'])
+def user_mgmt():
+    mode = request.args.get('mode')
+    action_code = request.args.get('oobCode')
+    continue_url = request.args.get('continueUrl')
+    lang = request.args.get('lang', 'en')
+
+    if mode == 'resetPassword':
+        return handle_reset_password(action_code, continue_url, lang)
+    elif mode == 'recoverEmail':
+        return handle_recover_email(action_code, lang)
+    elif mode == 'verifyEmail':
+        return handle_verify_email(action_code, continue_url, lang)
+    else:
+        return "Error: invalid mode"
+
+@bp.route('/auth/create_user', methods=['POST'])
+async def create_user():
+    request_json = await request.get_json()
+    email = request_json.get("email", None)
+    password = request_json.get("password", None)
+    response, status_code = create_user_and_send_verification(email, password)
+    return jsonify(response), status_code
+
+@bp.route('/confirm_reset_password', methods=['POST'])
+def confirm_reset_password():
+    return confirm_password_reset(request.form['action_code'], request.form['new_password'])
+
 @bp.route('/auth/me', methods=['GET'])
 async def get_user_info():
     try:
         user_object = get_authenticated_user_details(request_headers=request.headers)
-        print("User Object: ", user_object)
+        logging.info("User Object: ", user_object)
         return jsonify({
             "user_principal_id": user_object["user_principal_id"],
             "email": user_object["email"],
@@ -1079,6 +1098,8 @@ async def users():
         logging.exception("Exception in users")
         return jsonify({"error": str(e)}), 500
 
+
+##タイトル生成用関数##
 async def generate_title(conversation_messages):
     # make sure the messages are sorted by _ts descending
     title_prompt = 'Summarize the conversation so far into a 4-word or less title. Do not use any quotation marks or punctuation. Respond with a json object in the format {{"title": string}}. Do not include any other commentary or description.'
