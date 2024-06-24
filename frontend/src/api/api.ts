@@ -1,4 +1,4 @@
-import { UserInfo,ProviderUserInfo, ConversationRequest, Conversation, ChatMessage, CosmosDBHealth, CosmosDBStatus } from "./models";
+import { UserInfo, ConversationRequest, Conversation, ChatMessage, CosmosDBHealth, CosmosDBStatus } from "./models";
 import { chatHistorySampleData } from "../constants/chatHistory";
 
 export async function getUserInfo(): Promise<UserInfo[]> {
@@ -13,13 +13,6 @@ export async function getUserInfo(): Promise<UserInfo[]> {
     const payload = await response.json();
     return payload;
 }
-
-export async function getProviderUserInfo(): Promise<ProviderUserInfo> {
-    const response = await fetch("/auth/provider_user_info", {
-        method: "GET",
-    });
-    return response.json();
-} 
 
 export async function Logout(): Promise<boolean> {
     const response = await fetch("/auth/logout", {

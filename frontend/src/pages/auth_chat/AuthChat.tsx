@@ -833,9 +833,9 @@ const AuthChat = () => {
   };
   return (
     <>
-      {!loading && (
+      {!loading ? (
         <>
-          {user && (
+          {user ? (
             <div className="flex flex-col gap-5 flex-1" role="main">
               <Stack horizontal className="flex flex-1 mt-0 mb-5 mx-5 gap-1">
                 {appStateContext?.state.isChatHistoryOpen &&
@@ -1090,8 +1090,15 @@ const AuthChat = () => {
                   )}
               </Stack>
             </div>
+          ):(
+          <Navigate to="/login" />
           )}
         </>
+      ) : (
+        <div className="flex justify-center items-center h-full">
+          <Spinner className="self-start h-20 w-20 mr-1.25" />
+          <span className="text-lg font-medium mt-2">認証情報読み込み中...</span>
+        </div>
       )}
     </>
   );

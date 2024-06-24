@@ -76,22 +76,6 @@ export type UserInfo = {
     email: string;
     emailVerified: boolean;
     lastLoginAt: string;
-    lastRefreshAt: string;
-    localId: string;
-    passwordHash: string;
-    passwordUpdatedAt: number;
-    providerUserInfo: ProviderUserInfo[];
-    salt: string;
-    validSince: string;
-    version: number;
-}
-
-export type ProviderUserInfo = {
-    displayName: string;
-    email: string;
-    federatedId: string;
-    providerId: string;
-    rawId: string;
 }
 
 export enum CosmosDBStatus {

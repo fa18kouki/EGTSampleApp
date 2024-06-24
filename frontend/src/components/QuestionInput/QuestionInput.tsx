@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Stack, IconButton } from "@fluentui/react";
-import { SendRegular, SendFilled, AttachFilled, DismissSquareFilled, DismissSquareRegular } from "@fluentui/react-icons";
+import { SendRegular, SendFilled, AttachFilled, DismissSquareFilled, DismissSquareRegular,Attach24Regular,Attach24Filled } from "@fluentui/react-icons";
 import styles from "./QuestionInput.module.css";
 
 interface Props {
@@ -121,7 +121,7 @@ export const QuestionInput = ({
           htmlFor="file-upload"
           className="cursor-pointer mb-2"
         >
-          <span className="text-sm text-gray-600">📎</span>
+            {files.length === 0 ? <Attach24Regular style={{ fontSize: '12px' }} /> : <Attach24Filled style={{ fontSize: '24px' }} />}
         </label>
         <div
           className="cursor-pointer"

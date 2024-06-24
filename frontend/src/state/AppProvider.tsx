@@ -135,30 +135,38 @@ export const AppStateProvider: React.FC<AppStateProviderProps> = ({ children }) 
       if (state.chatHistoryLoadingState === ChatHistoryLoadingState.Success) {
         return;
       }
-      dispatch({ type: 'UPDATE_CHAT_HISTORY_LOADING_STATE', payload: ChatHistoryLoadingState.Loading })
+      //dispatch({ type: 'UPDATE_CHAT_HISTORY_LOADING_STATE', payload: ChatHistoryLoadingState.Loading })
       historyEnsure()
         .then(response => {
           if (response?.cosmosDB) {
-            fetchChatHistory()
-              .then(res => {
-                if (res) {
-                  dispatch({ type: 'UPDATE_CHAT_HISTORY_LOADING_STATE', payload: ChatHistoryLoadingState.Success })
-                  dispatch({ type: 'SET_COSMOSDB_STATUS', payload: response })
-                } else {
+            if (state.user !== null) {
+              fetchChatHistory()
+                .then(res => {
+                  if (res) {
+                    dispatch({ type: 'UPDATE_CHAT_HISTORY_LOADING_STATE', payload: ChatHistoryLoadingState.Success })
+                    dispatch({ type: 'SET_COSMOSDB_STATUS', payload: response })
+                  } else {
+                    dispatch({ type: 'UPDATE_CHAT_HISTORY_LOADING_STATE', payload: ChatHistoryLoadingState.Fail })
+                    dispatch({
+                      type: 'SET_COSMOSDB_STATUS',
+                      payload: { cosmosDB: false, status: CosmosDBStatus.NotWorking }
+                    })
+                  }
+                })
+                .catch(_err => {
                   dispatch({ type: 'UPDATE_CHAT_HISTORY_LOADING_STATE', payload: ChatHistoryLoadingState.Fail })
                   dispatch({
                     type: 'SET_COSMOSDB_STATUS',
                     payload: { cosmosDB: false, status: CosmosDBStatus.NotWorking }
                   })
-                }
-              })
-              .catch(_err => {
-                dispatch({ type: 'UPDATE_CHAT_HISTORY_LOADING_STATE', payload: ChatHistoryLoadingState.Fail })
-                dispatch({
-                  type: 'SET_COSMOSDB_STATUS',
-                  payload: { cosmosDB: false, status: CosmosDBStatus.NotWorking }
                 })
+            } else {
+              dispatch({ type: 'UPDATE_CHAT_HISTORY_LOADING_STATE', payload: ChatHistoryLoadingState.Fail })
+              dispatch({
+                type: 'SET_COSMOSDB_STATUS',
+                payload: { cosmosDB: false, status: CosmosDBStatus.NotWorking }
               })
+            }
           } else {
             dispatch({ type: 'UPDATE_CHAT_HISTORY_LOADING_STATE', payload: ChatHistoryLoadingState.Fail })
             dispatch({ type: 'SET_COSMOSDB_STATUS', payload: response })
@@ -170,9 +178,10 @@ export const AppStateProvider: React.FC<AppStateProviderProps> = ({ children }) 
         })
     }
     getHistoryEnsure()
-  }, [state.chatHistoryLoadingState])
+  }, [state.chatHistoryLoadingState, state.user])
 
   useEffect(() => {
+    console.log("FrontendSettings")
     const getFrontendSettings = async () => {
       frontendSettings()
         .then(response => {
@@ -184,6 +193,6 @@ export const AppStateProvider: React.FC<AppStateProviderProps> = ({ children }) 
     }
     getFrontendSettings()
   }, [])
-  console.log('ProviderState: ', state);
+  console.log('AppProviderState: ', state);
   return <AppStateContext.Provider value={{ state, dispatch }}>{children}</AppStateContext.Provider>
 }
