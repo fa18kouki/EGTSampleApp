@@ -1066,7 +1066,7 @@ async def get_custom_claims_route():
         logging.exception("Exception in set_custom_claims_route")
         return jsonify({"error": str(e)}), 500
 
-@bp.route('/users', methods=['GET'])
+@bp.route('/auth/get_users', methods=['GET'])
 async def users():
     try:
         users = fetch_users()

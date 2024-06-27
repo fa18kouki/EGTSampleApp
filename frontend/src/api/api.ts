@@ -11,7 +11,7 @@ import {
     updatePassword,
     User,
     updateProfile,
-    deleteUser
+    deleteUser,
 } from "firebase/auth";
 
 //基本的な認証はフロントエンド、カスタムクレーム、認証メールの送信はバックエンドで対応
@@ -26,6 +26,13 @@ export async function getUserInfo(): Promise<UserInfo[]> {
 
     const payload = await response.json();
     return payload;
+}
+
+export async function getUsers(): Promise<User[]> {
+    const response = await fetch('/auth/get_users',{
+        method: 'GET',
+    });
+    return response.json();
 }
 
 export async function Login(email: string, password: string,displayName: string): Promise<User | AuthError> {
@@ -67,9 +74,12 @@ export async function UpdataPassword(user: User, password: string): Promise<void
 export async function UpdateUser(user: User, displayName: string): Promise<void> {
     await updateProfile(user, { displayName: displayName });
 }
-
+/*
 export async function DeleteUser(user_id: string): Promise<void> {
-    //await deleteUser(user_id);
+    await deleteUser(user_id);
+}*/
+export async function DeleteUser(user: User): Promise<void> {
+    await deleteUser(user);
 }
 
 export async function getCC(user_id: string): Promise<string> {

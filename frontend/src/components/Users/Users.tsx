@@ -58,7 +58,7 @@ export const UserListDialog: React.FC = () => {
 
   const handleDeleteUser = async (user: User) => {
     try {
-      await DeleteUser(user.localId);
+      //await DeleteUser(user);
       await fetchUsers(); // ユーザー一覧を再取得
     } catch (error) {
       console.error("ユーザーの削除中にエラーが発生しました:", error);
