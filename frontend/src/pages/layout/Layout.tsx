@@ -34,10 +34,13 @@ const Layout = () => {
 
   useEffect(() => {
     const fetchCustomClaims = async () => {
+      console.log(user);
       if(user){
         const customClaims = await getCC(user.uid);
-        const isAdminClaim = JSON.parse(customClaims).admin;
-        setIsAdmin(isAdminClaim === true);
+        console.log(customClaims);
+        const isAdminClaim = JSON.parse(customClaims).claims.admin;
+        console.log(isAdminClaim);
+        setIsAdmin(isAdminClaim);
       }
     };
     fetchCustomClaims();
@@ -90,9 +93,11 @@ const Layout = () => {
                   {isAdmin && (
                     <UserListDialog />
                   )}
+                  {/*
                   <MenuItem icon={<SettingsRegular />} onClick={() => navigate("/settings")}>
                     設定
                   </MenuItem>
+                  */}
                   <MenuItem icon={<SignOutRegular />} onClick={logout}>
                     ログアウト
                   </MenuItem>

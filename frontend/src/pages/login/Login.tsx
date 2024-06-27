@@ -124,15 +124,7 @@ const Login: React.FC = () => {
             >
               ログイン
             </button>
-            <p className="text-center mt-4 text-[#4A4A4A] font-roboto">
-              新規登録は
-              <Link to={`/signup/`} className="text-[#121212] hover:underline">
-                こちら
-              </Link>
-            </p>
           </form>
-          <h2>管理画面</h2>
-          <UserListDialog />
         </div>
       )}
     </>

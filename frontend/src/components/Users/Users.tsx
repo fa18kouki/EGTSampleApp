@@ -80,7 +80,7 @@ export const UserListDialog: React.FC = () => {
         <h2 className="text-2xl font-bold mb-4">ユーザー一覧</h2>
         <div className="mb-4 flex justify-between items-center">
           <button
-            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded flex items-center"
+            className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded flex items-center"
             onClick={() => navigate("/signup")}
           >
             <AddRegular className="h-5 w-5 mr-2" />

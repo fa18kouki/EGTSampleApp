@@ -1,6 +1,6 @@
 import React, { useState, useEffect, FormEvent, ChangeEvent,useContext } from "react";
 import {
-  User,
+  User as FirebaseUser,
 } from "firebase/auth";
 import { auth } from "../../../FirebaseConfig";
 import { Navigate, Link, useNavigate } from "react-router-dom";
@@ -21,10 +21,11 @@ const SignUp: React.FC = () => {
     try {
       // Signupを使用してユーザーを作成
       const newUser = await Signup(loginEmail, loginPassword);
-      if(newUser && beAdmin){
-        await UpdateUser(newUser as User, username);
+      if(newUser && typeof newUser === 'object' && 'uid' in newUser){
+        await UpdateUser(newUser, username);
+        setCC(newUser.uid, "admin", beAdmin.toString());
       }
-
+      
       setErrorMessage("ユーザーが正常に作成されました");
       navigate("/");
     } catch (error) {
