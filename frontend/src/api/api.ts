@@ -49,10 +49,12 @@ export async function Login(email: string, password: string,displayName: string)
 
 export async function Signup(email: string, password: string): Promise<User | AuthError> {
     try {
+        /*
         const passwordValidation = await validatePassword(auth,password);
         if (passwordValidation.isValid) {
             throw new Error("Password is not valid");
         }
+        */
         const response = await createUserWithEmailAndPassword(auth, email, password);
         return response.user;
     } catch (error) {

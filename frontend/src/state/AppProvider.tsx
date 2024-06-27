@@ -135,9 +135,6 @@ export const AppStateProvider: React.FC<AppStateProviderProps> = ({ children }) 
     }
 
     const getHistoryEnsure = async () => {
-      if (state.chatHistoryLoadingState === ChatHistoryLoadingState.Success) {
-        return;
-      }
       //dispatch({ type: 'UPDATE_CHAT_HISTORY_LOADING_STATE', payload: ChatHistoryLoadingState.Loading })
       historyEnsure()
         .then(response => {
