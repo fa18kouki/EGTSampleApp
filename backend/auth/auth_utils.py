@@ -66,15 +66,24 @@ def get_userid(request_headers):
 
 def set_custom_claims(request_headers):
     try:
+        logging.info("set_custom_claims", request_headers)
         user_id = request_headers.get('user_id')
         claim = request_headers.get('claim')
         value = request_headers.get('value') if request_headers.get('value') else False
         initialize_firebase()
         auth.set_custom_user_claims(user_id, {claim: value})
-        print(f"Claim {claim} set for user {user_id} to {value}")
+        logging.info(f"Claim {claim} set for user {user_id} to {value}")
     except Exception as e:
         raise AuthError(f"Error in set_custom_claims: {str(e)}")
 
+def get_custom_claims(request_headers):
+    try:
+        uid = request_headers.get('user_id')
+        initialize_firebase()
+        user = auth.get_user(uid)
+        return user.custom_claims
+    except Exception as e:
+        raise AuthError(f"Error in set_custom_claims: {str(e)}")
 
 def verify_email(request_headers):
     try:
@@ -132,14 +141,6 @@ def fetch_users():
         return users
     except Exception as e:
         raise AuthError(f"Error in fetch_users: {str(e)}")
-
-
-def get_user(uid):
-    try:
-        initialize_firebase()
-        return auth.get_user(uid).__dict__
-    except Exception as e:
-        raise AuthError(f"Error in get_user: {str(e)}")
     
 def handle_reset_password(action_code, continue_url, lang):
     try:

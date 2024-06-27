@@ -13,7 +13,7 @@ import {
   Stack,
   Panel,
   DefaultButton,
-  Spinner
+  Spinner,
 } from "@fluentui/react";
 import {
   SquareRegular,
@@ -60,6 +60,7 @@ import {
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { ChatHistoryPanel } from "../../components/ChatHistory/ChatHistoryPanel";
+import { UserListDialog } from '../../components/Users/Users';
 import { LLMDropdown, UserDropdown } from "../../components/Dropdown";
 import { AppStateContext } from "../../state/AppProvider";
 import { useBoolean } from "@fluentui/react-hooks";
@@ -81,6 +82,7 @@ const AuthChat = () => {
   const appStateContext = useContext(AppStateContext);
   const ui = appStateContext?.state.frontendSettings?.ui;
   const AUTH_ENABLED = appStateContext?.state.frontendSettings?.auth_enabled;
+  const user = appStateContext?.state.user;
   const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showLoadingMessage, setShowLoadingMessage] = useState<boolean>(false);
@@ -182,19 +184,6 @@ const AuthChat = () => {
     }
   };
   */
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-
-  useEffect(() => {
-    onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
-      appStateContext?.dispatch({
-        type: "UPDATE_USER",
-        payload: currentUser,
-      });
-    });
-  }, []);
 
   const navigate = useNavigate();
 
@@ -833,272 +822,259 @@ const AuthChat = () => {
   };
   return (
     <>
-      {!loading ? (
-        <>
-          {user ? (
-            <div className="flex flex-col gap-5 flex-1" role="main">
-              <Stack horizontal className="flex flex-1 mt-0 mb-5 mx-5 gap-1">
-                {appStateContext?.state.isChatHistoryOpen &&
-                  appStateContext?.state.isCosmosDBAvailable?.status !==
-                    CosmosDBStatus.NotConfigured && (
-                    <ChatHistoryPanel
-                      newChat={newChat}
-                      setMessages={setMessages}
-                      setIsCitationPanelOpen={setIsCitationPanelOpen}
-                      setActiveCitation={setActiveCitation}
-                    />
-                  )}
-                <div className="flex flex-col items-center flex-1 bg-gradient-to-b from-white to-gray-400 shadow-md rounded-lg overflow-y-auto max-h-[calc(100vh-100px)]">
-                  <div className="flex justify-end items-start">
-                    <Stack horizontal horizontalAlign="space-between">
-                      <Stack horizontal>
-                        {appStateContext?.state.isCosmosDBAvailable?.status !==
-                          CosmosDBStatus.NotConfigured && (
-                          <>
-                            {appStateContext?.state.isChatHistoryOpen ? (
-                              <Button
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.backgroundColor =
-                                    "#f0f0f0";
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.backgroundColor =
-                                    "transparent";
-                                }}
-                                onClick={handleHistoryClick}
-                                style={{
-                                  transition: "background-color 0.3s ease",
-                                  borderRadius: "8px",
-                                  padding: "4px",
-                                }}
-                              >
-                                <PanelLeftRegular className="w-10 h-9 text-gray-700 float-right" />
-                              </Button>
-                            ) : (
-                              <Button
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.backgroundColor =
-                                    "#f0f0f0";
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.backgroundColor =
-                                    "transparent";
-                                }}
-                                onClick={handleHistoryClick}
-                                style={{
-                                  transition: "background-color 0.3s ease",
-                                  borderRadius: "8px",
-                                  padding: "4px",
-                                }}
-                              >
-                                <PanelLeftTextRegular className="w-10 h-9 text-gray-700 float-right" />
-                              </Button>
-                            )}
-                          </>
+      {user ? (
+        <div className="flex flex-col gap-5 flex-1" role="main">
+          <Stack horizontal className="flex flex-1 mt-0 mb-5 mx-5 gap-1">
+            {appStateContext?.state.isChatHistoryOpen &&
+              appStateContext?.state.isCosmosDBAvailable?.status !==
+                CosmosDBStatus.NotConfigured && (
+                <ChatHistoryPanel
+                  newChat={newChat}
+                  setMessages={setMessages}
+                  setIsCitationPanelOpen={setIsCitationPanelOpen}
+                  setActiveCitation={setActiveCitation}
+                />
+              )}
+            <div className="flex flex-col items-center flex-1 bg-gradient-to-b from-white to-gray-400 shadow-md rounded-lg overflow-y-auto max-h-[calc(100vh-100px)]">
+              <div className="flex justify-end items-start">
+                <Stack horizontal horizontalAlign="space-between">
+                  <Stack horizontal>
+                    {appStateContext?.state.isCosmosDBAvailable?.status !==
+                      CosmosDBStatus.NotConfigured && (
+                      <>
+                        {appStateContext?.state.isChatHistoryOpen ? (
+                          <Button
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = "#f0f0f0";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor =
+                                "transparent";
+                            }}
+                            onClick={handleHistoryClick}
+                            style={{
+                              transition: "background-color 0.3s ease",
+                              borderRadius: "8px",
+                              padding: "4px",
+                            }}
+                          >
+                            <PanelLeftRegular className="w-10 h-9 text-gray-700 float-right" />
+                          </Button>
+                        ) : (
+                          <Button
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = "#f0f0f0";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor =
+                                "transparent";
+                            }}
+                            onClick={handleHistoryClick}
+                            style={{
+                              transition: "background-color 0.3s ease",
+                              borderRadius: "8px",
+                              padding: "4px",
+                            }}
+                          >
+                            <PanelLeftTextRegular className="w-10 h-9 text-gray-700 float-right" />
+                          </Button>
                         )}
-                      </Stack>
-                      <LLMDropdown onItemSelect={onItemSelect} />
-                    </Stack>
-                  </div>
-                  {appStateContext?.state.chatHistoryLoadingState ===
-                  ChatHistoryLoadingState.Loading ? (
-                    <div className="flex justify-center items-center h-full">
-                      <Spinner
-                        className="self-start h-20 w-20 mr-1.25"
-                      />
-                      <span className="text-lg font-medium mt-2">履歴を読み込んでいます...</span>
-                    </div>
-                  ) : !messages || messages.length < 1 ? (
-                    <Stack className="flex-grow flex flex-col justify-center items-center">
-                      <span
-                        className="animate-fadeIn text-6xl font-serif"
-                        aria-hidden="true"
-                      >
-                        こんにちは、{user.displayName}さん
-                        <br />
-                        本日はいかがいたしましょうか？
-                      </span>
-                    </Stack>
-                  ) : (
-                    <div
-                      className="flex-grow max-w-[60%] w-full overflow-y-auto px-6 flex flex-col mt-6"
-                      style={{ marginBottom: isLoading ? "40px" : "0px" }}
-                      role="log"
-                    >
-                      {messages.map((answer, index) => (
-                        <>
-                          {answer.role === "user" ? (
-                            <div className="flex justify-end mb-3" tabIndex={0}>
-                              <div className="flex p-5 bg-gray-200 rounded-lg shadow-md text-gray-800 text-sm leading-6 max-w-[80%] whitespace-pre-wrap break-words font-sans">
-                                {answer.content}
-                              </div>
-                            </div>
-                          ) : answer.role === "assistant" ? (
-                            <div className="mb-3 max-w-[80%] flex">
-                              <Answer
-                                answer={{
-                                  answer: answer.content,
-                                  citations: parseCitationFromMessage(
-                                    messages[index - 1]
-                                  ),
-                                  message_id: answer.id,
-                                  feedback: answer.feedback,
-                                }}
-                                onCitationClicked={(c) => onShowCitation(c)}
-                              />
-                            </div>
-                          ) : answer.role === ERROR ? (
-                            <div className="p-5 rounded-lg shadow-md text-gray-800 text-sm leading-6 max-w-[800px] mb-3 border border-red-600">
-                              <Stack
-                                horizontal
-                                className="font-sans text-sm leading-6 whitespace-pre-wrap break-words gap-3 items-center"
-                              >
-                                <ErrorCircleRegular
-                                  className="text-red-600"
-                                  style={{ color: "rgba(182, 52, 67, 1)" }}
-                                />
-                                <span>Error</span>
-                              </Stack>
-                              <span className="font-sans text-sm leading-6 whitespace-pre-wrap break-words gap-3 items-center">
-                                {answer.content}
-                              </span>
-                            </div>
-                          ) : null}
-                        </>
-                      ))}
-                      {showLoadingMessage && (
-                        <>
-                          <div className="mb-3 max-w-[80%] flex">
-                            <Answer
-                              answer={{
-                                answer: "Generating answer...",
-                                citations: [],
-                              }}
-                              onCitationClicked={() => null}
-                            />
-                          </div>
-                        </>
-                      )}
-                      <div ref={chatMessageStreamEnd} />
-                    </div>
-                  )}
-                  <Stack
-                    horizontal
-                    className="sticky flex-0 px-6 w-[calc(100%-100px)] max-w-[60%] mb-12 mt-2"
-                  >
-                    {isLoading && (
-                      <Stack
-                        horizontal
-                        className="box-border flex flex-row justify-center items-center p-1.5 gap-1 absolute w-[161px] h-[32px] left-[calc(50%-161px/2+25.8px)] bottom-[116px] border border-gray-300 rounded-lg"
-                        role="button"
-                        aria-label="Stop generating"
-                        tabIndex={0}
-                        onClick={stopGenerating}
-                        onKeyDown={(e) =>
-                          e.key === "Enter" || e.key === " "
-                            ? stopGenerating()
-                            : null
-                        }
-                      >
-                        <SquareRegular
-                          className="w-3.5 h-3.5 text-gray-700"
-                          aria-hidden="true"
-                        />
-                        <span
-                          className="w-[103px] h-[20px] font-semibold text-sm leading-5 text-gray-800 flex-none order-0 flex-grow-0"
-                          aria-hidden="true"
-                        >
-                          Stop generating
-                        </span>
-                      </Stack>
+                      </>
                     )}
-                    <QuestionInput
-                      clearOnSend
-                      placeholder="AIにメッセージを送信する"
-                      disabled={isLoading}
-                      onSend={(question, file, id) => {
-                        if (
-                          appStateContext?.state.isCosmosDBAvailable?.cosmosDB
-                        ) {
-                          makeApiRequestWithCosmosDB(question, file, id); // Updated to include file
-                        } else {
-                          makeApiRequestWithoutCosmosDB(question, file, id); // Updated to include file
-                        }
-                      }}
-                      conversationId={
-                        appStateContext?.state.currentChat?.id
-                          ? appStateContext?.state.currentChat?.id
-                          : undefined
-                      }
-                    />
                   </Stack>
+                  <LLMDropdown onItemSelect={onItemSelect} />
+                </Stack>
+              </div>
+              {appStateContext?.state.chatHistoryLoadingState ===
+              ChatHistoryLoadingState.Loading ? (
+                <div className="flex justify-center items-center h-full">
+                  <Spinner className="self-start h-20 w-20 mr-1.25" />
+                  <span className="text-lg font-medium mt-2">
+                    履歴を読み込んでいます...
+                  </span>
                 </div>
-                {messages &&
-                  messages.length > 0 &&
-                  isCitationPanelOpen &&
-                  activeCitation && (
-                    <Stack.Item
-                      className="flex flex-col items-start p-4 gap-2 bg-white shadow-md rounded-lg flex-auto order-0 self-stretch flex-grow-[0.3] max-w-[30%] overflow-y-scroll max-h-[calc(100vh-100px)]"
-                      tabIndex={0}
-                      role="tabpanel"
-                      aria-label="Citations Panel"
-                    >
-                      <Stack
-                        aria-label="Citations Panel Header Container"
-                        horizontal
-                        className="w-full"
-                        horizontalAlign="space-between"
-                        verticalAlign="center"
-                      >
-                        <span
-                          aria-label="Citations"
-                          className="font-semibold text-lg leading-6 text-black flex-none order-0 flex-grow-0"
-                        >
-                          Citations
-                        </span>
-                        <IconButton
-                          iconProps={{ iconName: "Cancel" }}
-                          aria-label="Close citations panel"
-                          onClick={() => setIsCitationPanelOpen(false)}
-                        />
-                      </Stack>
-                      <h5
-                        className="font-semibold text-base leading-6 text-gray-800 mt-3 mb-3"
-                        tabIndex={0}
-                        title={
-                          activeCitation.url &&
-                          !activeCitation.url.includes("blob.core")
-                            ? activeCitation.url
-                            : activeCitation.title ?? ""
-                        }
-                        onClick={() => onViewSource(activeCitation)}
-                      >
-                        {activeCitation.title}
-                      </h5>
-                      <div tabIndex={0}>
-                        <ReactMarkdown
-                          linkTarget="_blank"
-                          className="font-normal text-sm leading-5 text-black flex-none order-1 self-stretch flex-grow-0"
-                          children={DOMPurify.sanitize(activeCitation.content, {
-                            ALLOWED_TAGS: XSSAllowTags,
-                          })}
-                          remarkPlugins={[remarkGfm]}
-                          rehypePlugins={[rehypeRaw]}
+              ) : !messages || messages.length < 1 ? (
+                <Stack className="flex-grow flex flex-col justify-center items-center">
+                  <span
+                    className="animate-fadeIn text-6xl font-serif"
+                    aria-hidden="true"
+                  >
+                    こんにちは、{user.displayName}さん
+                    <br />
+                    本日はいかがいたしましょうか？
+                  </span>
+                </Stack>
+              ) : (
+                <div
+                  className="flex-grow max-w-[60%] w-full overflow-y-auto px-6 flex flex-col mt-6"
+                  style={{ marginBottom: isLoading ? "40px" : "0px" }}
+                  role="log"
+                >
+                  {messages.map((answer, index) => (
+                    <>
+                      {answer.role === "user" ? (
+                        <div className="flex justify-end mb-3" tabIndex={0}>
+                          <div className="flex p-5 bg-gray-200 rounded-lg shadow-md text-gray-800 text-sm leading-6 max-w-[80%] whitespace-pre-wrap break-words font-sans">
+                            {answer.content}
+                          </div>
+                        </div>
+                      ) : answer.role === "assistant" ? (
+                        <div className="mb-3 max-w-[80%] flex">
+                          <Answer
+                            answer={{
+                              answer: answer.content,
+                              citations: parseCitationFromMessage(
+                                messages[index - 1]
+                              ),
+                              message_id: answer.id,
+                              feedback: answer.feedback,
+                            }}
+                            onCitationClicked={(c) => onShowCitation(c)}
+                          />
+                        </div>
+                      ) : answer.role === ERROR ? (
+                        <div className="p-5 rounded-lg shadow-md text-gray-800 text-sm leading-6 max-w-[800px] mb-3 border border-red-600">
+                          <Stack
+                            horizontal
+                            className="font-sans text-sm leading-6 whitespace-pre-wrap break-words gap-3 items-center"
+                          >
+                            <ErrorCircleRegular
+                              className="text-red-600"
+                              style={{ color: "rgba(182, 52, 67, 1)" }}
+                            />
+                            <span>Error</span>
+                          </Stack>
+                          <span className="font-sans text-sm leading-6 whitespace-pre-wrap break-words gap-3 items-center">
+                            {answer.content}
+                          </span>
+                        </div>
+                      ) : null}
+                    </>
+                  ))}
+                  {showLoadingMessage && (
+                    <>
+                      <div className="mb-3 max-w-[80%] flex">
+                        <Answer
+                          answer={{
+                            answer: "Generating answer...",
+                            citations: [],
+                          }}
+                          onCitationClicked={() => null}
                         />
                       </div>
-                    </Stack.Item>
+                    </>
                   )}
+                  <div ref={chatMessageStreamEnd} />
+                </div>
+              )}
+              <Stack
+                horizontal
+                className="sticky flex-0 px-6 w-[calc(100%-100px)] max-w-[60%] mb-12 mt-2"
+              >
+                {isLoading && (
+                  <Stack
+                    horizontal
+                    className="box-border flex flex-row justify-center items-center p-1.5 gap-1 absolute w-[161px] h-[32px] left-[calc(50%-161px/2+25.8px)] bottom-[116px] border border-gray-300 rounded-lg"
+                    role="button"
+                    aria-label="Stop generating"
+                    tabIndex={0}
+                    onClick={stopGenerating}
+                    onKeyDown={(e) =>
+                      e.key === "Enter" || e.key === " "
+                        ? stopGenerating()
+                        : null
+                    }
+                  >
+                    <SquareRegular
+                      className="w-3.5 h-3.5 text-gray-700"
+                      aria-hidden="true"
+                    />
+                    <span
+                      className="w-[103px] h-[20px] font-semibold text-sm leading-5 text-gray-800 flex-none order-0 flex-grow-0"
+                      aria-hidden="true"
+                    >
+                      Stop generating
+                    </span>
+                  </Stack>
+                )}
+                <QuestionInput
+                  clearOnSend
+                  placeholder="AIにメッセージを送信する"
+                  disabled={isLoading}
+                  onSend={(question, file, id) => {
+                    if (appStateContext?.state.isCosmosDBAvailable?.cosmosDB) {
+                      makeApiRequestWithCosmosDB(question, file, id); // Updated to include file
+                    } else {
+                      makeApiRequestWithoutCosmosDB(question, file, id); // Updated to include file
+                    }
+                  }}
+                  conversationId={
+                    appStateContext?.state.currentChat?.id
+                      ? appStateContext?.state.currentChat?.id
+                      : undefined
+                  }
+                />
               </Stack>
             </div>
-          ):(
-          <Navigate to="/login" />
-          )}
-        </>
-      ) : (
-        <div className="flex justify-center items-center h-full">
-          <Spinner className="self-start h-20 w-20 mr-1.25" />
-          <span className="text-lg font-medium mt-2">認証情報読み込み中...</span>
+            {messages &&
+              messages.length > 0 &&
+              isCitationPanelOpen &&
+              activeCitation && (
+                <Stack.Item
+                  className="flex flex-col items-start p-4 gap-2 bg-white shadow-md rounded-lg flex-auto order-0 self-stretch flex-grow-[0.3] max-w-[30%] overflow-y-scroll max-h-[calc(100vh-100px)]"
+                  tabIndex={0}
+                  role="tabpanel"
+                  aria-label="Citations Panel"
+                >
+                  <Stack
+                    aria-label="Citations Panel Header Container"
+                    horizontal
+                    className="w-full"
+                    horizontalAlign="space-between"
+                    verticalAlign="center"
+                  >
+                    <span
+                      aria-label="Citations"
+                      className="font-semibold text-lg leading-6 text-black flex-none order-0 flex-grow-0"
+                    >
+                      Citations
+                    </span>
+                    <IconButton
+                      iconProps={{ iconName: "Cancel" }}
+                      aria-label="Close citations panel"
+                      onClick={() => setIsCitationPanelOpen(false)}
+                    />
+                  </Stack>
+                  <h5
+                    className="font-semibold text-base leading-6 text-gray-800 mt-3 mb-3"
+                    tabIndex={0}
+                    title={
+                      activeCitation.url &&
+                      !activeCitation.url.includes("blob.core")
+                        ? activeCitation.url
+                        : activeCitation.title ?? ""
+                    }
+                    onClick={() => onViewSource(activeCitation)}
+                  >
+                    {activeCitation.title}
+                  </h5>
+                  <div tabIndex={0}>
+                    <ReactMarkdown
+                      linkTarget="_blank"
+                      className="font-normal text-sm leading-5 text-black flex-none order-1 self-stretch flex-grow-0"
+                      children={DOMPurify.sanitize(activeCitation.content, {
+                        ALLOWED_TAGS: XSSAllowTags,
+                      })}
+                      remarkPlugins={[remarkGfm]}
+                      rehypePlugins={[rehypeRaw]}
+                    />
+                  </div>
+                </Stack.Item>
+              )}
+          </Stack>
         </div>
+      ) : (
+        <Navigate to="/login" />
       )}
     </>
   );

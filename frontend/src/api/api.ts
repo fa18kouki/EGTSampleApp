@@ -1,6 +1,20 @@
 import { UserInfo, ConversationRequest, Conversation, ChatMessage, CosmosDBHealth, CosmosDBStatus } from "./models";
 import { chatHistorySampleData } from "../constants/chatHistory";
+import { auth } from "../../FirebaseConfig";
+import { 
+    signInWithEmailAndPassword ,
+    createUserWithEmailAndPassword ,
+    signOut,
+    PasswordValidationStatus,
+    AuthError,
+    validatePassword,
+    updatePassword,
+    User,
+    updateProfile,
+    deleteUser
+} from "firebase/auth";
 
+//基本的な認証はフロントエンド、カスタムクレーム、認証メールの送信はバックエンドで対応
 export async function getUserInfo(): Promise<UserInfo[]> {
     const response = await fetch('/auth/me',{
         method: 'GET',
@@ -14,11 +28,70 @@ export async function getUserInfo(): Promise<UserInfo[]> {
     return payload;
 }
 
-export async function Logout(): Promise<boolean> {
-    const response = await fetch("/auth/logout", {
-        method: "GET",
+export async function Login(email: string, password: string,displayName: string): Promise<User | AuthError> {
+    try {
+        const response = await signInWithEmailAndPassword(auth, email, password);
+        return response.user;
+    } catch (error) {
+        console.error("Error signing in: ", error);
+        return {
+            message:"Unauthorized"
+        } as AuthError;
+    }
+}
+
+export async function Signup(email: string, password: string): Promise<User | AuthError> {
+    try {
+        const passwordValidation = await validatePassword(auth,password);
+        if (passwordValidation.isValid) {
+            throw new Error("Password is not valid");
+        }
+        const response = await createUserWithEmailAndPassword(auth, email, password);
+        return response.user;
+    } catch (error) {
+        console.error("Error signing up: ", error);
+        return {
+            message:"Unauthorized"
+        } as AuthError;
+    }
+}
+
+export async function Logout(): Promise<void> {
+    await signOut(auth);
+}
+
+export async function UpdataPassword(user: User, password: string): Promise<void> {
+    await updatePassword(user, password);
+}
+
+export async function UpdateUser(user: User, displayName: string): Promise<void> {
+    await updateProfile(user, { displayName: displayName });
+}
+
+export async function DeleteUser(user_id: string): Promise<void> {
+    //await deleteUser(user_id);
+}
+
+export async function getCC(user_id: string): Promise<string> {
+    const response = await fetch('/auth/get_custom_claims',{
+        method: 'GET',
+        headers: {
+            "user_id": user_id
+        }
     });
-    return response.ok;
+    return response.text();
+}
+
+export async function setCC(user_id: string,claims: string, value: string): Promise<string> {
+    const response = await fetch('/auth/set_custom_claims',{
+        method: 'GET',
+        headers: {
+            "user_id": user_id,
+            "claims": claims,
+            "value": value
+        }
+    });
+    return response.text();
 }
 
 export async function conversationApi(options: ConversationRequest, abortSignal: AbortSignal): Promise<Response> {

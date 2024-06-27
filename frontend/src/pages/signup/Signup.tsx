@@ -1,58 +1,76 @@
-import React, { useState, useEffect, FormEvent, ChangeEvent } from "react";
+import React, { useState, useEffect, FormEvent, ChangeEvent,useContext } from "react";
 import {
-  signInWithEmailAndPassword,
-  onAuthStateChanged,
   User,
 } from "firebase/auth";
 import { auth } from "../../../FirebaseConfig";
-import { Navigate, Link } from "react-router-dom";
-import styles from "./Signup.module.css"; // CSSファイルをインポート
-
-const Signup: React.FC = () => {
+import { Navigate, Link, useNavigate } from "react-router-dom";
+import { Login,Signup,getCC,setCC,UpdateUser } from "../../api";
+import { AppStateContext } from "../../state/AppProvider";
+const SignUp: React.FC = () => {
+  const appStateContext = useContext(AppStateContext);
+  const user = appStateContext?.state.user;
   const [loginEmail, setLoginEmail] = useState<string>("");
   const [loginPassword, setLoginPassword] = useState<string>("");
-  const [user, setUser] = useState<User | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [beAdmin, setBeAdmin] = useState<boolean>(false);
   const [username, setUsername] = useState<string>("");
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
+    const navigate = useNavigate();
     try {
-      await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
-    } catch (errorMessage) {
-      console.log(errorMessage);
-      if (
-        errorMessage === "auth/wrong-password" ||
-        errorMessage === "auth/user-not-found"
-      ) {
-        setErrorMessage("メールアドレスまたはパスワードが間違っています");
-      } else if (errorMessage === "auth/user-not-found") {
-        setErrorMessage("ユーザーが見つかりませんでした");
+      // Signupを使用してユーザーを作成
+      const newUser = await Signup(loginEmail, loginPassword);
+      if(newUser && beAdmin){
+        await UpdateUser(newUser as User, username);
+      }
+
+      setErrorMessage("ユーザーが正常に作成されました");
+      navigate("/");
+    } catch (error) {
+      console.error(error);
+      // エラーメッセージを適切に設定
+      if (error === "auth/email-already-in-use") {
+        setErrorMessage("このメールアドレスは既に使用されています");
+      } else if (error === "auth/weak-password") {
+        setErrorMessage("パスワードが弱すぎます");
       } else {
-        setErrorMessage("エラーが発生しました");
+        setErrorMessage("ユーザー作成中にエラーが発生しました");
       }
     }
   };
 
   useEffect(() => {
-    onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
+    const fetchCustomClaims = async () => {
+      if (user) {
+        try {
+          const customClaims = await getCC(user.uid);
+          const isAdminClaim = JSON.parse(customClaims).admin;
+          setIsAdmin(isAdminClaim === true);
+        } catch (error) {
+          console.error('カスタムクレームの取得中にエラーが発生しました:', error);
+          setIsAdmin(false);
+        }
+      } else {
+        setIsAdmin(false);
+      }
+    };
+
+    fetchCustomClaims();
   }, []);
 
   return (
     <>
-      {user ? (
+      {(user && isAdmin) ? (
         <Navigate to={`/`} />
       ) : (
-        <div className={styles.container}>
-          <div className={styles.formWrapper}>
-            <h1 className={styles.title}>ユーザー新規作成ページ</h1>
+        <div className="flex justify-center items-center h-screen bg-gray-100">
+          <div className="p-8 rounded-lg shadow-lg bg-white max-w-md w-full">
+            <h1 className="text-center mb-4 text-gray-800">ユーザー新規作成ページ</h1>
             <form onSubmit={handleSubmit}>
-              <div className="errorMessage">{errorMessage}</div>
-              <div className={styles.inputGroup}>
-                <label className={styles.label}>ユーザー名</label>
+              <div className="text-red-600">{errorMessage}</div>
+              <div className="mb-4">
+                <label className="block mb-2 text-gray-600">ユーザー名</label>
                 <input
                   name="username"
                   type="text"
@@ -60,11 +78,11 @@ const Signup: React.FC = () => {
                   onChange={(e: ChangeEvent<HTMLInputElement>) =>
                     setUsername(e.target.value)
                   }
-                  className={styles.input}
+                  className="w-full p-2 rounded border border-gray-300"
                 />
               </div>
-              <div className={styles.inputGroup}>
-                <label className={styles.label}>メールアドレス</label>
+              <div className="mb-4">
+                <label className="block mb-2 text-gray-600">メールアドレス</label>
                 <input
                   name="email"
                   type="email"
@@ -72,11 +90,11 @@ const Signup: React.FC = () => {
                   onChange={(e: ChangeEvent<HTMLInputElement>) =>
                     setLoginEmail(e.target.value)
                   }
-                  className={styles.input}
+                  className="w-full p-2 rounded border border-gray-300"
                 />
               </div>
-              <div className={styles.inputGroup}>
-                <label className={styles.label}>パスワード</label>
+              <div className="mb-4">
+                <label className="block mb-2 text-gray-600">パスワード</label>
                 <input
                   name="password"
                   type="password"
@@ -84,11 +102,23 @@ const Signup: React.FC = () => {
                   onChange={(e: ChangeEvent<HTMLInputElement>) =>
                     setLoginPassword(e.target.value)
                   }
-                  className={styles.input}
+                  className="w-full p-2 rounded border border-gray-300"
                 />
-                <div className="inputGroup"></div>
               </div>
-              <button className={styles.button}>ユーザー新規作成</button>
+              <div className="mb-4">
+                <label className="block mb-2 text-gray-600">管理者権限</label>
+                <input
+                  name="isAdmin"
+                  type="checkbox"
+                  checked={isAdmin}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    setBeAdmin(e.target.checked)
+                  }
+                />
+              </div>
+              <button className="w-full p-3 rounded border-none bg-gray-600 text-white text-lg cursor-pointer hover:bg-gray-900">
+                ユーザー新規作成
+              </button>
             </form>
           </div>
         </div>
@@ -97,4 +127,4 @@ const Signup: React.FC = () => {
   );
 };
 
-export default Signup;
+export default SignUp;

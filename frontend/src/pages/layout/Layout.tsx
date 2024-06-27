@@ -6,105 +6,42 @@ import React, { useContext, useEffect, useState } from "react";
 import { auth } from "../../../FirebaseConfig";
 import { HistoryButton, ShareButton } from "../../components/common/Button";
 import { AppStateContext } from "../../state/AppProvider";
-import { CosmosDBStatus, Logout, getUserInfo } from "../../api";
+import { CosmosDBStatus, Logout, getCC } from "../../api";
 import EGTLogo from "../../assets/EGTLogo.svg";
-import { onAuthStateChanged, signOut, User } from "firebase/auth";
-import { NavigationFilled } from '@fluentui/react-icons';
+import { NavigationFilled,FolderPeople24Filled,FolderPeople24Regular } from '@fluentui/react-icons';
 import { UserDropdown } from "../../components/Dropdown/UserDropdown";
-
+import { Menu, MenuTrigger, MenuList, MenuItem, MenuPopover } from "@fluentui/react-components";
+import { SettingsRegular, SignOutRegular } from "@fluentui/react-icons";
+import { UserListDialog } from "../../components/Users/Users";
 
 const Layout = () => {
-  const [isSharePanelOpen, setIsSharePanelOpen] = useState<boolean>(false);
   const [copyClicked, setCopyClicked] = useState<boolean>(false);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [copyText, setCopyText] = useState<string>("Copy URL");
   const [shareLabel, setShareLabel] = useState<string | undefined>("Share");
   const [hideHistoryLabel, setHideHistoryLabel] =
     useState<string>("Hide chat history");
   const [showHistoryLabel, setShowHistoryLabel] =
     useState<string>("Show chat history");
+  const [showUserList, setShowUserList] = useState<boolean>(false);
   const appStateContext = useContext(AppStateContext);
-  const ui = appStateContext?.state.frontendSettings?.ui;
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-
-  const handleShareClick = () => {
-    setIsSharePanelOpen(true);
-  };
-
-  const checkAuthentication = async () => {
-    const isAuthenticated = await getUserInfo();
-    return isAuthenticated ? true : false;
-  };
-
-  const handleLogout = () => {
-    Logout();
-  };
-
-  const handleSharePanelDismiss = () => {
-    setIsSharePanelOpen(false);
-    setCopyClicked(false);
-    setCopyText("Copy URL");
-  };
-
-  const handleCopyClick = () => {
-    navigator.clipboard.writeText(window.location.href);
-    setCopyClicked(true);
-  };
-
-  const handleHistoryClick = () => {
-    appStateContext?.dispatch({ type: "TOGGLE_CHAT_HISTORY" });
-  };
-
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const authenticated = await checkAuthentication();
-      setIsAuthenticated(authenticated);
-    };
-
-    onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
-    });
-
-    checkAuth();
-  }, []);
-
+  const user = appStateContext?.state.user;
   const navigate = useNavigate();
-
   const logout = async () => {
-    await signOut(auth);
+    await Logout();
     navigate("/login/");
   };
 
   useEffect(() => {
-    if (copyClicked) {
-      setCopyText("Copied URL");
-    }
-  }, [copyClicked]);
-
-  useEffect(() => {}, [appStateContext?.state.isCosmosDBAvailable.status]);
-/*
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 480) {
-        setShareLabel(undefined);
-        setHideHistoryLabel("Hide history");
-        setShowHistoryLabel("Show history");
-      } else {
-        setShareLabel("Share");
-        setHideHistoryLabel("Hide chat history");
-        setShowHistoryLabel("Show chat history");
+    const fetchCustomClaims = async () => {
+      if(user){
+        const customClaims = await getCC(user.uid);
+        const isAdminClaim = JSON.parse(customClaims).admin;
+        setIsAdmin(isAdminClaim === true);
       }
     };
-
-    window.addEventListener("resize", handleResize);
-    handleResize();
-
-    return () => window.removeEventListener("resize", handleResize); 
+    fetchCustomClaims();
   }, []);
-*/ 
   return (
     <div className="flex flex-col h-full">
       <header className="bg-gray-900 text-gray-200 h-16 mb-5" role={"banner"}>
@@ -141,15 +78,27 @@ const Layout = () => {
             </ul>
           </nav>
           <div className="mr-3 relative">
-            <UserDropdown
-              onItemSelect={(item) => {
-                if (item.key === "logout") {
-                  logout();
-                } else if (item.key === "delete-account") {
-                  // アカウント削除のロジックをここに追加
-                }
-              }}
-            />
+            <Menu>
+              <MenuTrigger disableButtonEnhancement>
+                <button className="text-white hover:text-gray-300">
+                  {user?.displayName || 'ログイン'}
+                </button>
+              </MenuTrigger>
+
+              <MenuPopover>
+                <MenuList>
+                  {isAdmin && (
+                    <UserListDialog />
+                  )}
+                  <MenuItem icon={<SettingsRegular />} onClick={() => navigate("/settings")}>
+                    設定
+                  </MenuItem>
+                  <MenuItem icon={<SignOutRegular />} onClick={logout}>
+                    ログアウト
+                  </MenuItem>
+                </MenuList>
+              </MenuPopover>
+            </Menu>
           </div>
         </div>
       </header>

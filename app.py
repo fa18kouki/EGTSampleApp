@@ -33,7 +33,8 @@ from backend.auth.auth_utils import (
     handle_reset_password,
     handle_recover_email,
     handle_verify_email,
-    create_user_and_send_verification
+    create_user_and_send_verification,
+    get_custom_claims
 )
 from backend.history.cosmosdbservice import CosmosConversationClient
 from backend.prompt.cosmosdbservice import CosmosPromptClient
@@ -105,31 +106,6 @@ SEARCH_TOP_K = os.environ.get("SEARCH_TOP_K", 5)
 SEARCH_STRICTNESS = os.environ.get("SEARCH_STRICTNESS", 3)
 SEARCH_ENABLE_IN_DOMAIN = os.environ.get("SEARCH_ENABLE_IN_DOMAIN", "true")
 
-# ACS Integration Settings
-AZURE_SEARCH_SERVICE = os.environ.get("AZURE_SEARCH_SERVICE")
-AZURE_SEARCH_INDEX = os.environ.get("AZURE_SEARCH_INDEX")
-AZURE_SEARCH_KEY = os.environ.get("AZURE_SEARCH_KEY", None)
-AZURE_SEARCH_USE_SEMANTIC_SEARCH = os.environ.get(
-    "AZURE_SEARCH_USE_SEMANTIC_SEARCH", "false"
-)
-AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG = os.environ.get(
-    "AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG", "default"
-)
-AZURE_SEARCH_TOP_K = os.environ.get("AZURE_SEARCH_TOP_K", SEARCH_TOP_K)
-AZURE_SEARCH_ENABLE_IN_DOMAIN = os.environ.get(
-    "AZURE_SEARCH_ENABLE_IN_DOMAIN", SEARCH_ENABLE_IN_DOMAIN
-)
-AZURE_SEARCH_CONTENT_COLUMNS = os.environ.get("AZURE_SEARCH_CONTENT_COLUMNS")
-AZURE_SEARCH_FILENAME_COLUMN = os.environ.get("AZURE_SEARCH_FILENAME_COLUMN")
-AZURE_SEARCH_TITLE_COLUMN = os.environ.get("AZURE_SEARCH_TITLE_COLUMN")
-AZURE_SEARCH_URL_COLUMN = os.environ.get("AZURE_SEARCH_URL_COLUMN")
-AZURE_SEARCH_VECTOR_COLUMNS = os.environ.get("AZURE_SEARCH_VECTOR_COLUMNS")
-AZURE_SEARCH_QUERY_TYPE = os.environ.get("AZURE_SEARCH_QUERY_TYPE")
-AZURE_SEARCH_PERMITTED_GROUPS_COLUMN = os.environ.get(
-    "AZURE_SEARCH_PERMITTED_GROUPS_COLUMN"
-)
-AZURE_SEARCH_STRICTNESS = os.environ.get(
-    "AZURE_SEARCH_STRICTNESS", SEARCH_STRICTNESS)
 
 # AOAI Integration Settings
 AZURE_OPENAI_RESOURCE = os.environ.get("AZURE_OPENAI_RESOURCE")
@@ -1015,6 +991,7 @@ async def add_prompt():
         return jsonify({"error": str(e)}), 500
 
 ## Auth API ##
+#バックエンドでは、カスタムトークンのセット、確認、ユーザーの一覧の返し、メール認証の返信を行う。
 @bp.route("/auth/verify", methods=["POST"])
 async def verify_user():
     try:
@@ -1044,14 +1021,6 @@ def user_mgmt():
     else:
         return "Error: invalid mode"
 
-@bp.route('/auth/create_user', methods=['POST'])
-async def create_user():
-    request_json = await request.get_json()
-    email = request_json.get("email", None)
-    password = request_json.get("password", None)
-    response, status_code = create_user_and_send_verification(email, password)
-    return jsonify(response), status_code
-
 @bp.route('/confirm_reset_password', methods=['POST'])
 def confirm_reset_password():
     return confirm_password_reset(request.form['action_code'], request.form['new_password'])
@@ -1076,7 +1045,7 @@ async def get_user_info():
 @bp.route('/auth/set_custom_claims', methods=['POST'])
 async def set_custom_claims_route():
     try:
-        await set_custom_claims(request_headers=request.headers)
+        set_custom_claims(request_headers=request.headers)
         return jsonify({"message": "Custom claims set successfully"}), 200
     except AuthError as e:
         logging.exception("AuthError in set_custom_claims_route")
@@ -1085,6 +1054,17 @@ async def set_custom_claims_route():
         logging.exception("Exception in set_custom_claims_route")
         return jsonify({"error": str(e)}), 500
 
+@bp.route('/auth/get_custom_claims', methods=['GET'])
+async def get_custom_claims_route():
+    try:
+        claims = get_custom_claims(request_headers=request.headers)
+        return jsonify({"claims": claims}), 200
+    except AuthError as e:
+        logging.exception("AuthError in set_custom_claims_route")
+        return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        logging.exception("Exception in set_custom_claims_route")
+        return jsonify({"error": str(e)}), 500
 
 @bp.route('/users', methods=['GET'])
 async def users():

@@ -1,27 +1,35 @@
-import React, { useState, useEffect, FormEvent, ChangeEvent } from "react";
+import React, { useState, useEffect, useContext, FormEvent, ChangeEvent } from "react";
 import {
   signInWithEmailAndPassword,
   onAuthStateChanged,
   User,
 } from "firebase/auth";
+import { AppStateContext } from "../../state/AppProvider";
 import { auth } from "../../../FirebaseConfig";
-import { Navigate, Link } from "react-router-dom";
+import { Navigate, Link, useNavigate } from "react-router-dom";
+import { UserListDialog } from '../../components/Users/Users';
 
 const Login: React.FC = () => {
+  const appStateContext = useContext(AppStateContext);
   const [loginEmail, setLoginEmail] = useState<string>("");
   const [loginPassword, setLoginPassword] = useState<string>("");
-  const [user, setUser] = useState<User | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [emailErrorMessage, setEmailErrorMessage] = useState<string>("");
   const [passwordErrorMessage, setPasswordErrorMessage] = useState<string>("");
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [company, setCompany] = useState<string>("");
-
+  const navigate = useNavigate();
+  const user = appStateContext?.state.user;
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     try {
-      await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
+      const user = await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
+      appStateContext?.dispatch({
+        type: "UPDATE_USER",
+        payload: user.user,
+      });
+      navigate("/");
     } catch (errorMessage) {
       console.log(errorMessage);
       if (
@@ -32,16 +40,10 @@ const Login: React.FC = () => {
       } else if (errorMessage === "auth/user-not-found") {
         setErrorMessage("ユーザーが見つかりませんでした");
       } else {
-        setErrorMessage("エラーが発生しました");
+        setErrorMessage("入力された情報が正しくありません");
       }
     }
   };
-
-  useEffect(() => {
-    onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
-  }, []);
 
   return (
     <>
@@ -129,6 +131,8 @@ const Login: React.FC = () => {
               </Link>
             </p>
           </form>
+          <h2>管理画面</h2>
+          <UserListDialog />
         </div>
       )}
     </>

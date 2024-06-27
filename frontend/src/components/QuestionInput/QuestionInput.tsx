@@ -1,8 +1,7 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Stack, IconButton } from "@fluentui/react";
-import { SendRegular, SendFilled, AttachFilled, DismissSquareFilled, DismissSquareRegular,Attach24Regular,Attach24Filled } from "@fluentui/react-icons";
-import styles from "./QuestionInput.module.css";
-
+import { SendRegular, SendFilled, AttachFilled, DismissSquareFilled, DismissSquareRegular, Attach24Regular, Attach24Filled, MicRegular, MicFilled } from "@fluentui/react-icons";
+import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition'
 interface Props {
   onSend: (question: string, files?: File[] | null, id?: string) => void;
   disabled: boolean;
@@ -20,6 +19,34 @@ export const QuestionInput = ({
 }: Props) => {
   const [question, setQuestion] = useState<string>("");
   const [files, setFiles] = useState<File[]>([]);
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+
+  useEffect(() => {
+    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+      const SpeechRecognitionAPI = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognitionAPI();
+      (recognitionRef.current as any).continuous = true;
+      (recognitionRef.current as any).interimResults = true;
+      (recognitionRef.current as any).lang = 'ja-JP';
+
+      (recognitionRef.current as any).onresult = (event: any) => {
+        const transcript = Array.from(event.results)
+          .map((result: any) => result[0].transcript)
+          .join('');
+        setQuestion(transcript);
+      };
+    }
+  }, []);
+
+  const toggleListening = () => {
+    if (isListening) {
+      (recognitionRef.current as any)?.stop();
+    } else {
+      (recognitionRef.current as any)?.start();
+    }
+    setIsListening(!isListening);
+  };
 
   const sendQuestion = () => {
     if (disabled || (!question.trim() && files.length === 0)) {
@@ -82,15 +109,6 @@ export const QuestionInput = ({
                 className="cursor-pointer"
                 style={{ fontSize: '20px' }}
               />
-              {/*
-              <IconButton
-                iconProps={{ iconName: 'DismissCircleFilled' }}
-                title="Remove file"
-                ariaLabel="Remove file"
-                onClick={() => removeFile(index)}
-                className="ml-2"
-              />
-              */}
             </div>
           ))}
         </div>
@@ -123,6 +141,13 @@ export const QuestionInput = ({
         >
             {files.length === 0 ? <Attach24Regular style={{ fontSize: '12px' }} /> : <Attach24Filled style={{ fontSize: '24px' }} />}
         </label>
+        <div className="cursor-pointer mb-2" onClick={toggleListening}>
+          {isListening ? (
+            <MicFilled className="animate-pulse" style={{ fontSize: '24px', color: 'red' }} />
+          ) : (
+            <MicRegular style={{ fontSize: '24px' }} />
+          )}
+        </div>
         <div
           className="cursor-pointer"
           role="button"
