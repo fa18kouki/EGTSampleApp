@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { AddRegular, DeleteRegular } from "@fluentui/react-icons";
 import {
   Menu,
@@ -13,7 +13,8 @@ import {
   FolderPeople24Regular,
 } from "@fluentui/react-icons";
 import { useNavigate } from "react-router-dom";
-import { DeleteUser } from "../../api/api";
+import { DeleteUser, getUsers } from "../../api/api";
+import { AppStateContext } from "../../state/AppProvider";
 
 interface User {
   localId: string;
@@ -24,9 +25,10 @@ interface User {
 }
 
 export const UserListDialog: React.FC = () => {
+  const appStateContext = useContext(AppStateContext);
   const navigate = useNavigate();
   const [users, setUsers] = useState<User[]>([]);
-  const [isOpen, setIsOpen] = useState(false);
+  const isOpen = appStateContext?.state.isUsersPanelOpen;
 
   useEffect(() => {
     if (isOpen) {
@@ -36,12 +38,11 @@ export const UserListDialog: React.FC = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch("/users");
-      if (!response.ok) {
+      const response = await getUsers();
+      if (!response) {
         throw new Error("ユーザー情報の取得に失敗しました");
       }
-      const data = await response.json();
-      const formattedUsers = data.map((user: any) => ({
+      const formattedUsers = response.map((user: any) => ({
         localId: user._data.localId,
         email: user._data.email,
         displayName: user._data.displayName || "",
@@ -65,15 +66,15 @@ export const UserListDialog: React.FC = () => {
       // エラーメッセージを表示するなどの処理を追加してください
     }
   };
-
+  {/*
   if (!isOpen) {
     return (
-      <MenuItem icon={<FolderPeople24Filled />} onClick={() => setIsOpen(true)}>
+      <MenuItem icon={<FolderPeople24Filled />} onClick={() => appStateContext?.dispatch({ type: 'TOGGLE_USERS_PANEL' })}>
         ユーザー一覧
       </MenuItem>
     );
   }
-
+  */}
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
       <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[600px] overflow-y-auto">
@@ -122,7 +123,7 @@ export const UserListDialog: React.FC = () => {
         <div className="mt-4 text-right">
           <button
             className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded"
-            onClick={() => setIsOpen(false)}
+            onClick={() => appStateContext?.dispatch({ type: 'TOGGLE_USERS_PANEL' })}
           >
             閉じる
           </button>

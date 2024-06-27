@@ -24,6 +24,7 @@ export interface AppState {
   frontendSettings: FrontendSettings | null
   feedbackState: { [answerId: string]: Feedback.Neutral | Feedback.Positive | Feedback.Negative }
   user: User | null
+  isUsersPanelOpen: boolean
 }
 
 export type Action =
@@ -45,6 +46,7 @@ export type Action =
     }
   | { type: 'GET_FEEDBACK_STATE'; payload: string }
   | { type: 'UPDATE_USER'; payload: User | null }
+  | { type: 'TOGGLE_USERS_PANEL' }
 
 const initialState: AppState = {
   isChatHistoryOpen: false,
@@ -58,7 +60,8 @@ const initialState: AppState = {
   },
   frontendSettings: null,
   feedbackState: {},
-  user: null
+  user: null,
+  isUsersPanelOpen: false
 }
 
 const loadState = (): AppState => {

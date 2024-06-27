@@ -91,7 +91,9 @@ const Layout = () => {
               <MenuPopover>
                 <MenuList>
                   {isAdmin && (
-                    <UserListDialog />
+                   <MenuItem icon={<FolderPeople24Filled />} onClick={() => appStateContext?.dispatch({ type: 'TOGGLE_USERS_PANEL' })}>
+                    ユーザー管理
+                  </MenuItem>
                   )}
                   {/*
                   <MenuItem icon={<SettingsRegular />} onClick={() => navigate("/settings")}>

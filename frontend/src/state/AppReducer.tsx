@@ -77,6 +77,8 @@ export const appStateReducer = (state: AppState, action: Action): AppState => {
             };    
         case 'UPDATE_USER':
             return { ...state, user: action.payload };
+        case 'TOGGLE_USERS_PANEL':
+            return { ...state, isUsersPanelOpen: !state.isUsersPanelOpen };
         default:
             return state;
       }

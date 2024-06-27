@@ -9,6 +9,7 @@ import { AppStateContext } from "../../state/AppProvider";
 const SignUp: React.FC = () => {
   const appStateContext = useContext(AppStateContext);
   const user = appStateContext?.state.user;
+  const navigate = useNavigate();
   const [loginEmail, setLoginEmail] = useState<string>("");
   const [loginPassword, setLoginPassword] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState<string>("");
@@ -17,7 +18,7 @@ const SignUp: React.FC = () => {
   const [username, setUsername] = useState<string>("");
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const navigate = useNavigate();
+    
     try {
       // Signupを使用してユーザーを作成
       const newUser = await Signup(loginEmail, loginPassword);
@@ -111,7 +112,7 @@ const SignUp: React.FC = () => {
                 <input
                   name="isAdmin"
                   type="checkbox"
-                  checked={isAdmin}
+                  checked={beAdmin}
                   onChange={(e: ChangeEvent<HTMLInputElement>) =>
                     setBeAdmin(e.target.checked)
                   }

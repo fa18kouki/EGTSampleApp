@@ -60,7 +60,7 @@ import {
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { ChatHistoryPanel } from "../../components/ChatHistory/ChatHistoryPanel";
-import { UserListDialog } from '../../components/Users/Users';
+import { UserListDialog } from "../../components/Users/Users";
 import { LLMDropdown, UserDropdown } from "../../components/Dropdown";
 import { AppStateContext } from "../../state/AppProvider";
 import { useBoolean } from "@fluentui/react-hooks";
@@ -835,6 +835,9 @@ const AuthChat = () => {
                   setActiveCitation={setActiveCitation}
                 />
               )}
+            {appStateContext?.state.isUsersPanelOpen && (
+              <UserListDialog />
+            )}
             <div className="flex flex-col items-center flex-1 bg-gradient-to-b from-white to-gray-400 shadow-md rounded-lg overflow-y-auto max-h-[calc(100vh-100px)]">
               <div className="flex justify-end items-start">
                 <Stack horizontal horizontalAlign="space-between">
@@ -894,16 +897,16 @@ const AuthChat = () => {
                   </span>
                 </div>
               ) : !messages || messages.length < 1 ? (
-                <Stack className="flex-grow flex flex-col justify-center items-center">
-                  <span
-                    className="animate-fadeIn text-6xl font-serif"
-                    aria-hidden="true"
-                  >
-                    こんにちは、{user.displayName}さん
-                    <br />
-                    本日はいかがいたしましょうか？
-                  </span>
-                </Stack>
+                  <Stack className="flex-grow flex flex-col justify-center items-center">
+                    <span
+                      className="animate-fadeIn text-6xl font-serif"
+                      aria-hidden="true"
+                    >
+                      こんにちは、{user.displayName}さん
+                      <br />
+                      本日はいかがいたしましょうか？
+                    </span>
+                  </Stack>
               ) : (
                 <div
                   className="flex-grow max-w-[60%] w-full overflow-y-auto px-6 flex flex-col mt-6"
