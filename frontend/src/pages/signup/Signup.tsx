@@ -24,7 +24,9 @@ const SignUp: React.FC = () => {
       const newUser = await Signup(loginEmail, loginPassword);
       if(newUser && typeof newUser === 'object' && 'uid' in newUser){
         await UpdateUser(newUser, username);
-        setCC(newUser.uid, "admin", beAdmin.toString());
+        if(beAdmin){
+          setCC(newUser.uid, "admin", "true");
+        }
       }
       
       setErrorMessage("ユーザーが正常に作成されました");
