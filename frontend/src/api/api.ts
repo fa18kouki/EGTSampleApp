@@ -1,5 +1,6 @@
 import { UserInfo, ConversationRequest, Conversation, ChatMessage, CosmosDBHealth, CosmosDBStatus } from "./models";
 import { chatHistorySampleData } from "../constants/chatHistory";
+import { Prompt } from "./models";
 import { auth } from "../../FirebaseConfig";
 import { 
     signInWithEmailAndPassword ,
@@ -446,13 +447,13 @@ export const historyMessageFeedback = async (messageId: string, feedback: string
     return response;
 }
 
-export const addPrompt = async (userName: string, prompt: string, tags: string[]): Promise<Response> => {
+export const addPrompt = async (newPrompt: Prompt): Promise<Response> => {
     const response = await fetch("/prompt/add", {
         method: "POST",
         body: JSON.stringify({
-            userName: userName,
-            prompt: prompt,
-            tags: tags,
+            userName: newPrompt.userName,
+            content: newPrompt.content, 
+            tags: newPrompt.tags,
         }),
         headers: {
             "Content-Type": "application/json"
@@ -477,18 +478,19 @@ export const getPrompts = async (): Promise<Response> => {
     const response = await fetch("/prompt/get_prompts", {
         method: "GET",
     })
-    .then((res) => {
-        return res
+    .then(async (res) => {
+        const payload = await res.json();
+        return payload.map((item: any) => ({
+            id: item.id ? parseInt(item.id) : null,
+            userName: item.userName,
+            tags: item.tags,
+            content: item.content
+        }));
     })
     .catch((err) => {
-        console.error("There was an issue fetching prompts.");
-        let errRes: Response = {
-            ...new Response,
-            ok: false,
-            status: 500,
-        }
-        return errRes;
-    })
+        console.error("プロンプトの取得中に問題が発生しました。");
+        return [] as Prompt[];
+    });
     return response;
 }
 

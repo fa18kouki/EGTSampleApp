@@ -47,7 +47,7 @@ const Layout = () => {
   }, []);
   return (
     <div className="flex flex-col h-full">
-      <header className="bg-gray-900 text-gray-200 h-16 mb-5" role={"banner"}>
+      <header className="bg-gray-900 text-gray-200 h-16 mb-5 px-4" role={"banner"}>
         <div className="flex items-center justify-between mx-3 h-full">
           <Link to="/" className="ml-3 font-semibold text-left">
             <img src={EGTLogo} className="h-10" alt="EGT Logo" />
@@ -76,6 +76,30 @@ const Layout = () => {
                   }
                 >
                   プロンプト
+                </NavLink>
+              </li>
+              <li className="ml-5">
+                <NavLink
+                  to="/dify"
+                  className={({ isActive }) =>
+                    isActive
+                      ? "opacity-100 text-gray-200 no-underline"
+                      : "opacity-40 text-gray-200 no-underline transition-opacity duration-500 ease-in-out hover:text-white"
+                  }
+                >
+                  カスタマイズチャット
+                </NavLink>
+              </li>
+              <li className="ml-5">
+                <NavLink
+                  to="/dify2"
+                  className={({ isActive }) =>
+                    isActive
+                      ? "opacity-100 text-gray-200 no-underline"
+                      : "opacity-40 text-gray-200 no-underline transition-opacity duration-500 ease-in-out hover:text-white"
+                  }
+                >
+                  Gemini
                 </NavLink>
               </li>
             </ul>

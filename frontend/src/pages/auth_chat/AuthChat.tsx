@@ -78,6 +78,12 @@ const enum messageStatus {
   Done = "Done",
 }
 
+const ExamplePrompts = [
+  "プロンプト1",
+  "プロンプト2",
+  "プロンプト3",
+];
+
 const AuthChat = () => {
   const appStateContext = useContext(AppStateContext);
   const ui = appStateContext?.state.frontendSettings?.ui;
@@ -455,7 +461,7 @@ const AuthChat = () => {
         let errorChatMsg: ChatMessage = {
           id: uuid(),
           role: ERROR,
-          content: `応答の生成中にエラーが発生しました。チャット履歴を保存できません。${errorResponseMessage}`,
+          content: `応答の生成中に���ラーが発生しました。チャット履歴を保存できません。${errorResponseMessage}`,
           date: new Date().toISOString(),
         };
         let resultConversation;
@@ -820,6 +826,15 @@ const AuthChat = () => {
         ChatHistoryLoadingState.Loading
     );
   };
+
+  const handlePromptClick = (prompt: string) => {
+    // 入力部分にプロンプトを設定するロジック
+    const inputElement = document.getElementById("questionInput") as HTMLInputElement;
+    if (inputElement) {
+      inputElement.value = prompt;
+    }
+  };
+
   return (
     <>
       {user ? (
@@ -897,16 +912,29 @@ const AuthChat = () => {
                   </span>
                 </div>
               ) : !messages || messages.length < 1 ? (
-                  <Stack className="flex-grow flex flex-col justify-center items-center">
-                    <span
-                      className="animate-fadeIn text-6xl font-serif"
-                      aria-hidden="true"
-                    >
-                      こんにちは、{user.displayName}さん
-                      <br />
-                      本日はいかがいたしましょうか？
-                    </span>
-                  </Stack>
+                <Stack className="flex-grow flex flex-col justify-center items-center">
+                  <span
+                    className="animate-fadeIn text-6xl font-serif"
+                    aria-hidden="true"
+                  >
+                    こんにちは、{user.displayName}さん
+                    <br />
+                    本日はいかがいたしましょうか？
+                  </span>
+                  {/*
+                  <div className="mt-4">
+                    {ExamplePrompts.map((prompt, index) => (
+                      <div
+                        key={index}
+                        className="p-2 bg-gray-200 rounded-lg shadow-md text-gray-800 text-sm leading-6 max-w-[80%] whitespace-pre-wrap break-words font-sans cursor-pointer mb-2"
+                        onClick={() => handlePromptClick(prompt)}
+                      >
+                        {prompt}
+                      </div>
+                    ))}
+                  </div>
+                  */}
+                </Stack>
               ) : (
                 <div
                   className="flex-grow max-w-[60%] w-full overflow-y-auto px-6 flex flex-col mt-6"
@@ -1001,6 +1029,7 @@ const AuthChat = () => {
                   </Stack>
                 )}
                 <QuestionInput
+                  id="questionInput"
                   clearOnSend
                   placeholder="AIにメッセージを送信する"
                   disabled={isLoading}

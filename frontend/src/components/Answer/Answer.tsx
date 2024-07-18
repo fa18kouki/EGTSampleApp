@@ -302,7 +302,7 @@ export const Answer = ({ answer, onCitationClicked }: Props) => {
       </>
     );
   };
-
+  // 回答の装飾
   const components = {
     code({ node, ...props }: { node: any; [key: string]: any }) {
       let language;
@@ -352,6 +352,51 @@ export const Answer = ({ answer, onCitationClicked }: Props) => {
       return (
         <td style={{ border: "1px solid #ddd", padding: "8px" }} {...props} />
       );
+    },
+    h1({ node, ...props }: { node: any; [key: string]: any }) {
+      return <h1 style={{ fontSize: "2em", fontWeight: "bold" }} {...props} />;
+    },
+    h2({ node, ...props }: { node: any; [key: string]: any }) {
+      return <h2 style={{ fontSize: "1.5em", fontWeight: "bold" }} {...props} />;
+    },
+    h3({ node, ...props }: { node: any; [key: string]: any }) {
+      return <h3 style={{ fontSize: "1.17em", fontWeight: "bold" }} {...props} />;
+    },
+    p({ node, ...props }: { node: any; [key: string]: any }) {
+      return <p style={{ margin: "1em 0" }} {...props} />;
+    },
+    a({ node, ...props }: { node: any; [key: string]: any }) {
+      return <a style={{ color: "blue", textDecoration: "underline" }} {...props} />;
+    },
+    ul({ node, ...props }: { node: any; [key: string]: any }) {
+      return <ul style={{ paddingLeft: "20px", listStyleType: "disc" }} {...props} />;
+    },
+    ol({ node, ...props }: { node: any; [key: string]: any }) {
+      return <ol style={{ paddingLeft: "20px", listStyleType: "decimal" }} {...props} />;
+    },
+    li({ node, ...props }: { node: any; [key: string]: any }) {
+      return <li style={{ margin: "0.5em 0" }} {...props} />;
+    },
+    blockquote({ node, ...props }: { node: any; [key: string]: any }) {
+      return <blockquote style={{ borderLeft: "4px solid #ddd", paddingLeft: "1em", color: "#666", fontStyle: "italic" }} {...props} />;
+    },
+    img({ node, ...props }: { node: any; [key: string]: any }) {
+      return <img style={{ maxWidth: "100%", height: "auto" }} {...props} />;
+    },
+    strong({ node, ...props }: { node: any; [key: string]: any }) {
+      return <strong style={{ fontWeight: "bold" }} {...props} />;
+    },
+    em({ node, ...props }: { node: any; [key: string]: any }) {
+      return <em style={{ fontStyle: "italic" }} {...props} />;
+    },
+    del({ node, ...props }: { node: any; [key: string]: any }) {
+      return <del style={{ textDecoration: "line-through" }} {...props} />;
+    },
+    hr({ node, ...props }: { node: any; [key: string]: any }) {
+      return <hr style={{ border: "1px solid #ddd", margin: "1em 0" }} {...props} />;
+    },
+    pre({ node, ...props }: { node: any; [key: string]: any }) {
+      return <pre style={{ background: "#f6f8fa", padding: "1em", borderRadius: "5px", overflowX: "auto" }} {...props} />;
     },
   };
   return (
@@ -406,17 +451,21 @@ export const Answer = ({ answer, onCitationClicked }: Props) => {
                     }
                   />
                   <div className="relative">
-                    {isCopied ? (
+                    <Clipboard20Filled
+                      aria-hidden="false"
+                      aria-label="Copy to clipboard"
+                      onClick={onCopyToClipboard}
+                      style={{
+                        color: isCopied ? "green" : "slategray",
+                        cursor: "pointer",
+                        transition: "color 0.5s ease",
+                        transform: isCopied ? "scale(1.2)" : "scale(1)",
+                      }}
+                    />
+                    {isCopied && (
                       <div className="absolute top-[-20px] right-0 bg-black text-white text-xs py-1 px-2 rounded transition-opacity duration-1000">
                         Copied!
                       </div>
-                    ) : (
-                      <Clipboard20Filled
-                        aria-hidden="false"
-                        aria-label="Copy to clipboard"
-                        onClick={onCopyToClipboard}
-                        style={{ color: "slategray", cursor: "pointer" }}
-                      />
                     )}
                   </div>
                 </Stack>

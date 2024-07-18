@@ -114,11 +114,10 @@ AZURE_OPENAI_KEY = os.environ.get("AZURE_OPENAI_KEY")
 AZURE_OPENAI_DEPLOYMENT = os.environ.get("AZURE_OPENAI_DEPLOYMENT")
 AZURE_OPENAI_TEMPERATURE = os.environ.get("AZURE_OPENAI_TEMPERATURE", 0)
 AZURE_OPENAI_TOP_P = os.environ.get("AZURE_OPENAI_TOP_P", 1.0)
-AZURE_OPENAI_MAX_TOKENS = os.environ.get("AZURE_OPENAI_MAX_TOKENS", 1000)
+AZURE_OPENAI_MAX_TOKENS = os.environ.get("AZURE_OPENAI_MAX_TOKENS", 10000)
 AZURE_OPENAI_STOP_SEQUENCE = os.environ.get("AZURE_OPENAI_STOP_SEQUENCE")
 AZURE_OPENAI_SYSTEM_MESSAGE = os.environ.get(
-    "AZURE_OPENAI_SYSTEM_MESSAGE",
-    "You are an AI assistant that helps people find information.",
+    "AZURE_OPENAI_SYSTEM_MESSAGE"
 )
 AZURE_OPENAI_PREVIEW_API_VERSION = os.environ.get(
     "AZURE_OPENAI_PREVIEW_API_VERSION",
@@ -320,6 +319,9 @@ def prepare_model_args(request_body):
         gptModel = "gpt-3.5-turbo-0125"
     
     messages = []
+    
+    system_message = AZURE_OPENAI_SYSTEM_MESSAGE
+    messages.append({"role": "system", "content": system_message})
     for message in request_messages:
         if message:
             messages.append(
@@ -377,7 +379,6 @@ def prepare_model_args(request_body):
 
 async def send_chat_request(request):
     model_args = prepare_model_args(request)
-
     try:
         client = init_openai_client()
         response = await client.chat.completions.create(**model_args)
@@ -945,6 +946,7 @@ async def ensure_cosmos():
             )
         else:
             return jsonify({"error": "CosmosDBが動作していません"}), 500
+        
 ## Prompt API ##
 @bp.route("/prompt/get_prompts", methods=["GET"])
 async def get_prompts():

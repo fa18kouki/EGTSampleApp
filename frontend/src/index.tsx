@@ -11,6 +11,8 @@ import Mypage from "./pages/mypage/Mypage";
 import AuthChat from "./pages/auth_chat/AuthChat";
 import Login from  "./pages/login/Login";
 import Signup from "./pages/signup/Signup";
+import Dify from "./components/Dify/Dify";
+import Dify2 from "./components/Dify2/Dify2"; 
 import { AppStateProvider } from "./state/AppProvider";
 
 initializeIcons();
@@ -26,6 +28,8 @@ export default function App() {
                         <Route path="signup" element={<Signup/>} />
                         <Route path="prompts" element={<Prompts />} />
                         <Route path="mypage" element={<Mypage />} />
+                        <Route path="dify" element={<Dify />} />
+                        <Route path="dify2" element={<Dify2 />} />
                         <Route path="*" element={<NoPage />} />
                     </Route>
                 </Routes>

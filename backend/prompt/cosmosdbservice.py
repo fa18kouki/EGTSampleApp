@@ -52,7 +52,7 @@ class CosmosPromptClient():
             'userName': user_name,
             'createdAt': datetime.utcnow().isoformat(),  
             'updatedAt': datetime.utcnow().isoformat(),  
-            'title': content,
+            'content': content,
             'tags': tags
         }
         ## TODO: add some error handling based on the output of the upsert_item call

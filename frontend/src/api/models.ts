@@ -1,3 +1,10 @@
+export type Prompt = {
+    id?: number | null;
+    userName: string;
+    tags: string[];
+    content: string;
+  }
+
 export type AskResponse = {
     answer: string;
     citations: Citation[];

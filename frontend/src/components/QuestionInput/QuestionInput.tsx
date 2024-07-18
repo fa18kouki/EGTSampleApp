@@ -3,6 +3,7 @@ import { Stack, IconButton } from "@fluentui/react";
 import { SendRegular, SendFilled, AttachFilled, DismissSquareFilled, DismissSquareRegular, Attach24Regular, Attach24Filled, MicRegular, MicFilled } from "@fluentui/react-icons";
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition'
 interface Props {
+  id: string;
   onSend: (question: string, files?: File[] | null, id?: string) => void;
   disabled: boolean;
   placeholder?: string;
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export const QuestionInput = ({
+  id,
   onSend,
   disabled,
   placeholder,
