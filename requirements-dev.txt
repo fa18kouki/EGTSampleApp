@@ -10,7 +10,7 @@ azure-cosmos==4.5.0
 azure-identity==1.15.0
 azure-search-documents==11.4.0b6
 azure-storage-blob==12.17.0
-blinker==1.8.1
+blinker==1.8.2
 CacheControl==0.14.0
 cachetools==5.3.3
 certifi==2024.2.2
